@@ -1,129 +1,91 @@
-import os
-import time
-import logging
+import os, json, time, logging, subprocess
 from datetime import datetime, timezone
-from pytrends.request import TrendReq
 from supabase import create_client, Client
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 log = logging.getLogger(__name__)
 
-SUPABASE_URL = os.environ["SUPABASE_URL"]
-SUPABASE_KEY = os.environ["SUPABASE_KEY"]
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-pytrends = TrendReq(
-    hl="ar", tz=180,
-    timeout=(10, 25),
-    retries=3,
-    backoff_factor=1,
-    requests_args={
-        "headers": {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-            "Accept-Language": "ar-SA,ar;q=0.9,en;q=0.8"
-        }
-    }
-)
-
-TIMEFRAME = "today 3-m"
+SUPABASE_URL = os.environ['SUPABASE_URL']
+SUPABASE_KEY = os.environ['SUPABASE_KEY']
+SERPAPI_KEY  = os.environ['SERPAPI_KEY']
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 KEYWORD_GROUPS = {
-    "geopolitical": ["Iran war", "Israel Gaza", "حرب إيران", "غزة"],
-    "economic":     ["Saudi Aramco", "oil price", "Vision 2030", "سعر النفط"],
-    "saudi_local":  ["رؤية 2030", "نيوم", "السعودية", "الرياض"]
+    'geopolitical': ['Iran war', 'Israel Gaza', 'حرب إيران', 'غزة'],
+    'economic':     ['Saudi Aramco', 'oil price', 'Vision 2030', 'سعر النفط'],
+    'saudi_local':  ['رؤية 2030', 'نيوم', 'السعودية', 'الرياض']
 }
 
-def fetch_interest(keywords, category):
-    records = []
-    chunks = [keywords[i:i+4] for i in range(0, len(keywords), 4)]
-    for chunk in chunks:
-        try:
-            log.info(f"Fetching: {chunk}")
-            pytrends.build_payload(chunk, timeframe=TIMEFRAME, geo="SA")
-            df = pytrends.interest_over_time()
-            if df.empty:
-                log.warning(f"Empty result for {chunk}")
-                continue
-            df = df.drop(columns=["isPartial"], errors="ignore")
-            for date_idx, row in df.iterrows():
-                for kw in chunk:
-                    if kw in row:
-                        records.append({
-                            "keyword": kw, "category": category,
-                            "date": date_idx.strftime("%Y-%m-%d"),
-                            "interest": int(row[kw]), "geo": "SA",
-                            "fetched_at": datetime.now(timezone.utc).isoformat()
-                        })
-            time.sleep(4)
-        except Exception as e:
-            log.error(f"Error {chunk}: {e}")
-            time.sleep(10)
-    return records
+def serpapi_get(params):
+    url = 'https://serpapi.com/search.json'
+    query = '&'.join(f'{k}={v}' for k,v in params.items())
+    r = subprocess.run(['curl','-s','--max-time','60',f'{url}?{query}'], capture_output=True, text=True)
+    return json.loads(r.stdout)
+
+def fetch_interest(keyword, category):
+    try:
+        log.info(f'Interest: {keyword}')
+        data = serpapi_get({'engine':'google_trends','q':keyword.replace(' ','+'),'geo':'SA','date':'today+3-m','data_type':'TIMESERIES','api_key':SERPAPI_KEY})
+        records = []
+        for point in data.get('interest_over_time',{}).get('timeline_data',[]):
+            for val in point.get('values',[]):
+                records.append({'keyword':keyword,'category':category,'date':point['date'][:12].strip(),'interest':int(val.get('extracted_value',0)),'geo':'SA','fetched_at':datetime.now(timezone.utc).isoformat()})
+        log.info(f'  {len(records)} points')
+        return records
+    except Exception as e:
+        log.error(f'Error {keyword}: {e}')
+        return []
+
+def fetch_related(keyword, category):
+    try:
+        log.info(f'Related: {keyword}')
+        data = serpapi_get({'engine':'google_trends','q':keyword.replace(' ','+'),'geo':'SA','date':'today+3-m','data_type':'RELATED_QUERIES','api_key':SERPAPI_KEY})
+        records = []
+        for qtype in ['rising','top']:
+            for item in data.get('related_queries',{}).get(qtype,[]):
+                records.append({'main_keyword':keyword,'related_query':item.get('query',''),'value':int(item.get('extracted_value',0)),'query_type':qtype,'category':category,'fetched_at':datetime.now(timezone.utc).isoformat()})
+        log.info(f'  {len(records)} related')
+        return records
+    except Exception as e:
+        log.error(f'Error related {keyword}: {e}')
+        return []
 
 def fetch_trending():
     try:
-        df = pytrends.trending_searches(pn="saudi_arabia")
-        return [{"keyword": row, "rank": i+1, "geo": "SA",
-                 "fetched_at": datetime.now(timezone.utc).isoformat()}
-                for i, row in enumerate(df[0].tolist())]
+        log.info('Trending...')
+        data = serpapi_get({'engine':'google_trends_trending_now','geo':'SA','api_key':SERPAPI_KEY})
+        records = []
+        for i,item in enumerate(data.get('trending_searches',[])[:20],start=1):
+            records.append({'keyword':item.get('query',''),'rank':i,'geo':'SA','fetched_at':datetime.now(timezone.utc).isoformat()})
+        log.info(f'  {len(records)} trending')
+        return records
     except Exception as e:
-        log.error(f"Trending error: {e}")
+        log.error(f'Trending error: {e}')
         return []
-
-def fetch_related(keywords, category):
-    records = []
-    chunks = [keywords[i:i+4] for i in range(0, len(keywords), 4)]
-    for chunk in chunks:
-        try:
-            pytrends.build_payload(chunk, timeframe=TIMEFRAME, geo="SA")
-            related = pytrends.related_queries()
-            for kw in chunk:
-                if kw not in related:
-                    continue
-                for qtype in ["top", "rising"]:
-                    df = related[kw].get(qtype)
-                    if df is None or df.empty:
-                        continue
-                    for _, row in df.iterrows():
-                        records.append({
-                            "main_keyword": kw, "related_query": row["query"],
-                            "value": int(row["value"]), "query_type": qtype,
-                            "category": category,
-                            "fetched_at": datetime.now(timezone.utc).isoformat()
-                        })
-            time.sleep(4)
-        except Exception as e:
-            log.error(f"Related error {chunk}: {e}")
-            time.sleep(10)
-    return records
 
 def save(table, records):
     if not records:
-        log.info(f"No records for {table}")
+        log.info(f'No records for {table}')
         return
-    try:
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        supabase.table(table).delete().gte("fetched_at", today).execute()
-        for i in range(0, len(records), 50):
-            supabase.table(table).insert(records[i:i+50]).execute()
-        log.info(f"✅ Saved {len(records)} → {table}")
-    except Exception as e:
-        log.error(f"Supabase error ({table}): {e}")
-        raise
+    today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+    supabase.table(table).delete().gte('fetched_at', today).execute()
+    for i in range(0, len(records), 50):
+        supabase.table(table).insert(records[i:i+50]).execute()
+    log.info(f'Saved {len(records)} to {table}')
 
 def main():
-    log.info("🚀 Starting fetch...")
+    log.info('Starting...')
     all_interest, all_related = [], []
     for category, keywords in KEYWORD_GROUPS.items():
-        log.info(f"Category: {category}")
-        all_interest.extend(fetch_interest(keywords, category))
-        all_related.extend(fetch_related(keywords, category))
-        time.sleep(5)
+        for kw in keywords:
+            all_interest.extend(fetch_interest(kw, category))
+            all_related.extend(fetch_related(kw, category))
+            time.sleep(1)
     trending = fetch_trending()
-    save("trends_interest", all_interest)
-    save("trends_trending", trending)
-    save("trends_related", all_related)
-    log.info("✅ Done!")
+    save('trends_interest', all_interest)
+    save('trends_trending', trending)
+    save('trends_related', all_related)
+    log.info('Done!')
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
