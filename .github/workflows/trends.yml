@@ -2,7 +2,7 @@ name: Google Trends Fetcher
 
 on:
   schedule:
-    - cron: "0 * * * *"
+    - cron: "0 0,6,12,18 * * *"
   workflow_dispatch:
 
 jobs:
@@ -27,7 +27,6 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-          SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
         run: python trends_fetcher.py
 
       - name: Build Dashboard

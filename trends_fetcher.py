@@ -1,91 +1,119 @@
-import os, json, time, logging, subprocess
+"""
+Google Trends Fetcher — trends_fetcher.py
+"""
+
+import os
+import json
+import time
+import logging
 from datetime import datetime, timezone
+from pytrends.request import TrendReq
 from supabase import create_client, Client
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
 
-SUPABASE_URL = os.environ['SUPABASE_URL']
-SUPABASE_KEY = os.environ['SUPABASE_KEY']
-SERPAPI_KEY  = os.environ['SERPAPI_KEY']
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+SUPABASE_URL = os.environ["SUPABASE_URL"]
+SUPABASE_KEY = os.environ["SUPABASE_KEY"]
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+pytrends = TrendReq(hl="ar", tz=180, timeout=(10, 25), retries=3, backoff_factor=0.5)
+TIMEFRAME = "today 3-m"
 
 KEYWORD_GROUPS = {
-    'geopolitical': ['Iran war', 'Israel Gaza', 'حرب إيران', 'غزة'],
-    'economic':     ['Saudi Aramco', 'oil price', 'Vision 2030', 'سعر النفط'],
-    'saudi_local':  ['رؤية 2030', 'نيوم', 'السعودية', 'الرياض']
+    "geopolitical": ["Iran war", "Israel Gaza", "Middle East conflict", "حرب إيران", "غزة"],
+    "economic": ["Saudi Aramco", "oil price", "NEOM", "Vision 2030", "سعر النفط"],
+    "saudi_local": ["رؤية 2030", "نيوم", "الرياض", "السعودية", "وزارة المالية"]
 }
 
-def serpapi_get(params):
-    url = 'https://serpapi.com/search.json'
-    query = '&'.join(f'{k}={v}' for k,v in params.items())
-    r = subprocess.run(['curl','-s','--max-time','60',f'{url}?{query}'], capture_output=True, text=True)
-    return json.loads(r.stdout)
+def fetch_interest_over_time(keywords, category):
+    chunks = [keywords[i:i+5] for i in range(0, len(keywords), 5)]
+    records = []
+    for chunk in chunks:
+        try:
+            pytrends.build_payload(chunk, timeframe=TIMEFRAME, geo="SA")
+            df = pytrends.interest_over_time()
+            if df.empty:
+                continue
+            df = df.drop(columns=["isPartial"], errors="ignore")
+            for date_idx, row in df.iterrows():
+                for kw in chunk:
+                    if kw in row:
+                        records.append({
+                            "keyword": kw, "category": category,
+                            "date": date_idx.strftime("%Y-%m-%d"),
+                            "interest": int(row[kw]), "geo": "SA",
+                            "fetched_at": datetime.now(timezone.utc).isoformat()
+                        })
+            time.sleep(2)
+        except Exception as e:
+            log.error(f"خطأ: {e}")
+            time.sleep(5)
+    return records
 
-def fetch_interest(keyword, category):
+def fetch_trending_now(geo="SA"):
     try:
-        log.info(f'Interest: {keyword}')
-        data = serpapi_get({'engine':'google_trends','q':keyword.replace(' ','+'),'geo':'SA','date':'now+7-d','data_type':'TIMESERIES','api_key':SERPAPI_KEY})
-        records = []
-        for point in data.get('interest_over_time',{}).get('timeline_data',[]):
-            for val in point.get('values',[]):
-                records.append({'keyword':keyword,'category':category,'date':point['date'][:12].strip(),'interest':int(val.get('extracted_value',0)),'geo':'SA','fetched_at':datetime.now(timezone.utc).isoformat()})
-        log.info(f'  {len(records)} points')
-        return records
+        df = pytrends.trending_searches(pn="saudi_arabia")
+        return [{"keyword": row, "rank": i+1, "geo": geo,
+                 "fetched_at": datetime.now(timezone.utc).isoformat()}
+                for i, row in enumerate(df[0].tolist())]
     except Exception as e:
-        log.error(f'Error {keyword}: {e}')
+        log.error(f"خطأ Trending: {e}")
         return []
 
-def fetch_related(keyword, category):
-    try:
-        log.info(f'Related: {keyword}')
-        data = serpapi_get({'engine':'google_trends','q':keyword.replace(' ','+'),'geo':'SA','date':'now+7-d','data_type':'RELATED_QUERIES','api_key':SERPAPI_KEY})
-        records = []
-        for qtype in ['rising','top']:
-            for item in data.get('related_queries',{}).get(qtype,[]):
-                records.append({'main_keyword':keyword,'related_query':item.get('query',''),'value':int(item.get('extracted_value',0)),'query_type':qtype,'category':category,'fetched_at':datetime.now(timezone.utc).isoformat()})
-        log.info(f'  {len(records)} related')
-        return records
-    except Exception as e:
-        log.error(f'Error related {keyword}: {e}')
-        return []
+def fetch_related_queries(keywords, category):
+    records = []
+    chunks = [keywords[i:i+5] for i in range(0, len(keywords), 5)]
+    for chunk in chunks:
+        try:
+            pytrends.build_payload(chunk, timeframe=TIMEFRAME, geo="SA")
+            related = pytrends.related_queries()
+            for kw in chunk:
+                if kw not in related:
+                    continue
+                for query_type in ["top", "rising"]:
+                    df = related[kw].get(query_type)
+                    if df is None or df.empty:
+                        continue
+                    for _, row in df.iterrows():
+                        records.append({
+                            "main_keyword": kw, "related_query": row["query"],
+                            "value": int(row["value"]), "query_type": query_type,
+                            "category": category,
+                            "fetched_at": datetime.now(timezone.utc).isoformat()
+                        })
+            time.sleep(2)
+        except Exception as e:
+            log.error(f"خطأ Related: {e}")
+            time.sleep(5)
+    return records
 
-def fetch_trending():
-    try:
-        log.info('Trending...')
-        data = serpapi_get({'engine':'google_trends_trending_now','geo':'SA','api_key':SERPAPI_KEY})
-        records = []
-        for i,item in enumerate(data.get('trending_searches',[])[:20],start=1):
-            records.append({'keyword':item.get('query',''),'rank':i,'geo':'SA','fetched_at':datetime.now(timezone.utc).isoformat()})
-        log.info(f'  {len(records)} trending')
-        return records
-    except Exception as e:
-        log.error(f'Trending error: {e}')
-        return []
-
-def save(table, records):
+def upsert_to_supabase(table, records):
     if not records:
-        log.info(f'No records for {table}')
         return
-    today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
-    supabase.table(table).delete().gte('fetched_at', today).execute()
-    for i in range(0, len(records), 50):
-        supabase.table(table).insert(records[i:i+50]).execute()
-    log.info(f'Saved {len(records)} to {table}')
+    try:
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        supabase.table(table).delete().gte("fetched_at", today).execute()
+        for i in range(0, len(records), 50):
+            supabase.table(table).insert(records[i:i+50]).execute()
+            log.info(f"✅ {len(records[i:i+50])} سجل في {table}")
+    except Exception as e:
+        log.error(f"خطأ Supabase: {e}")
+        raise
 
 def main():
-    log.info('Starting...')
+    log.info("🚀 بدأ الجلب...")
     all_interest, all_related = [], []
     for category, keywords in KEYWORD_GROUPS.items():
-        for kw in keywords:
-            all_interest.extend(fetch_interest(kw, category))
-            all_related.extend(fetch_related(kw, category))
-            time.sleep(1)
-    trending = fetch_trending()
-    save('trends_interest', all_interest)
-    save('trends_trending', trending)
-    save('trends_related', all_related)
-    log.info('Done!')
+        log.info(f"📊 {category}")
+        all_interest.extend(fetch_interest_over_time(keywords, category))
+        all_related.extend(fetch_related_queries(keywords, category))
+        time.sleep(3)
+    trending = fetch_trending_now()
+    upsert_to_supabase("trends_interest", all_interest)
+    upsert_to_supabase("trends_trending", trending)
+    upsert_to_supabase("trends_related", all_related)
+    log.info("✅ اكتمل")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
