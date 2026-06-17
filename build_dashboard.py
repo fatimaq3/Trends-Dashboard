@@ -95,6 +95,11 @@ main{{max-width:1400px;margin:0 auto;padding:32px 24px;display:grid;gap:32px;}}
 <main>
   <section>
     <div class="section-title">الاهتمام عبر الزمن — آخر 90 يوم</div>
+    <div class="search-box" style="display:flex;gap:8px;margin-bottom:16px">
+      <input id="kwSearchInput" type="text" placeholder="ابحث عن كلمة... / Search keyword..." style="flex:1;padding:8px 12px;font-size:13px;border:1px solid #E2DDD0;border-radius:8px;background:#F8F7F2;color:#1A1A14;outline:none" onkeydown="if(event.key==='Enter')searchKw()">
+      <button onclick="searchKw()" style="padding:8px 16px;font-size:13px;border:none;border-radius:8px;background:#286140;color:#fff;cursor:pointer">بحث</button>
+    </div>
+    <div id="searchResult" style="display:none;margin-bottom:16px;background:#fff;border:1px solid #E2DDD0;border-radius:10px;padding:16px"></div>
     <div class="tabs">{tabs_html}</div>
     {panels_html}
   </section>
@@ -141,6 +146,16 @@ function renderTrending(){{
 function renderRelated(){{
   const maxVal=Math.max(...RELATED.map(r=>r.value),1);
   document.getElementById('relatedBody').innerHTML=RELATED.slice(0,30).map(r=>`<tr><td>${{r.main_keyword}}</td><td>${{r.related_query}}</td><td><span class="badge">${{CAT_AR[r.category]||r.category}}</span></td><td><div class="bar-bg"><div class="bar-fill" style="width:${{Math.round(r.value/maxVal*100)}}%"></div></div></td></tr>`).join('');
+}}
+async function searchKw(){{
+  const inp=document.getElementById('kwSearchInput'),v=inp.value.trim();
+  const res=await fetch('https://tkmatxmnmphmuykhywtv.supabase.co/rest/v1/trends_interest?select=keyword,category,date,interest&keyword=eq.'+encodeURIComponent(v)+'&order=date.asc&limit=200',{{headers:{{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrbWF0eG1ubXBobXV5a2h5d3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MDM1NDgsImV4cCI6MjA5NTk3OTU0OH0.NUwIIhKfqILel1a12HL2NYS-R-iky0E2U7o9tlgtKac','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrbWF0eG1ubXBobXV5a2h5d3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MDM1NDgsImV4cCI6MjA5NTk3OTU0OH0.NUwIIhKfqILel1a12HL2NYS-R-iky0E2U7o9tlgtKac'}}}});
+  const rows=await res.json();
+  const dates=rows.map(r=>r.date),values=rows.map(r=>r.interest),cat=rows[0].category;
+  const panel=document.getElementById('searchResult');
+  panel.style.display='block';
+  panel.innerHTML='<canvas id='searchChart'></canvas>';
+  new Chart(document.getElementById('searchChart'),{{type:'line',data:{{labels:dates,datasets:[{{label:v,data:values,borderColor:'#286140',backgroundColor:'#28614022',borderWidth:2,pointRadius:0,fill:true,tension:0.4}}]}},options:{{responsive:true,plugins:{{legend:{{display:true}}}},scales:{{x:{{ticks:{{maxTicksLimit:6,color:'#64748B',font:{{size:10}}}},grid:{{color:'#2A2D3A'}}}},y:{{min:0,max:100,ticks:{{color:'#64748B',font:{{size:10}}}},grid:{{color:'#2A2D3A'}}}}}}}}}});
 }}
 (function init(){{
   const first=Object.keys(CHARTS_DATA)[0];
