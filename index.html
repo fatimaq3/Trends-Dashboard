@@ -28,7 +28,6 @@ main{max-width:1300px;margin:0 auto;padding:24px 20px;display:grid;gap:24px}
 .kpi-sub{font-size:11px;color:var(--muted);margin-top:3px}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px}
 .alert{background:var(--red-light);border:1px solid var(--red-border);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--red);display:flex;align-items:center;gap:8px;margin-bottom:8px;font-weight:500}
-.alert:last-child{margin-bottom:0}
 .chip{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:20px;font-size:12px;border:1px solid var(--border);background:var(--bg);cursor:pointer;transition:all .15s;color:var(--muted)}
 .chip.active{background:var(--green);border-color:var(--green);color:#fff}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
@@ -39,10 +38,6 @@ main{max-width:1300px;margin:0 auto;padding:24px 20px;display:grid;gap:24px}
 .kw-bar-bg{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
 .kw-bar{height:5px;border-radius:3px;background:var(--green)}
 .kw-val{font-size:12px;color:var(--muted);min-width:28px;text-align:left}
-.heatmap{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:8px}
-.hm-cell{height:28px;border-radius:3px}
-.hm-days{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:5px}
-.hm-day{font-size:10px;color:var(--muted);text-align:center}
 .leg{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);margin-top:8px}
 .leg-grad{width:80px;height:7px;border-radius:4px;background:linear-gradient(to left,#286140,#EBF3ED)}
 .leg-dot{width:10px;height:10px;border-radius:2px;display:inline-block;margin-left:4px}
@@ -51,40 +46,211 @@ main{max-width:1300px;margin:0 auto;padding:24px 20px;display:grid;gap:24px}
 .rising-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
 .rising-row:last-child{border-bottom:none}
 .rising-pct{color:var(--green);font-size:11px;font-weight:600;min-width:50px;text-align:left}
-.add-kw{display:flex;gap:8px;margin-top:12px}
-.add-kw input{flex:1;padding:7px 10px;font-size:13px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);outline:none}
-.add-kw input:focus{border-color:var(--green)}
-.add-kw button{padding:7px 14px;font-size:13px;border:none;border-radius:8px;background:var(--green);color:#fff;cursor:pointer}
 .tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;background:var(--green-light);border:1px solid #9FE1CB;color:var(--green);margin:2px}
-.tag-x{cursor:pointer;color:var(--green);font-size:14px;line-height:1}
 .filter-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
 .filter-row select{padding:5px 8px;font-size:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text)}
 .badge-geo{background:#E6F1FB;color:#0C447C;font-size:11px;padding:2px 7px;border-radius:4px}
 .badge-eco{background:var(--gold-light);color:var(--gold-dark);font-size:11px;padding:2px 7px;border-radius:4px}
 .badge-sa{background:var(--green-light);color:var(--green);font-size:11px;padding:2px 7px;border-radius:4px}
+.loading{text-align:center;padding:40px;color:var(--muted);font-size:14px}
+.spinner{display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:8px}
+@keyframes spin{to{transform:rotate(360px)}}
+.heatmap{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:8px}
+.hm-cell{height:28px;border-radius:3px}
+.hm-days{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:5px}
+.hm-day{font-size:10px;color:var(--muted);text-align:center}
 @media(max-width:700px){.grid2{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <header>
   <div class="logo">📈 Trends<span class="logo-accent">Watch</span> 🇸🇦</div>
-  <div class="updated">آخر تحديث / Last updated: 17 Jun 2026 — 10:05 UTC</div>
+  <div class="updated" id="updatedAt">جاري التحميل...</div>
 </header>
-<main>
+<main id="mainContent">
+  <div class="loading"><div class="spinner"></div><br>جاري تحميل البيانات من Supabase...</div>
+</main>
 
+<script>
+const SUPABASE_URL = 'https://tkmatxmnmphmuykhywtv.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrbWF0eG1ubXBobXV5a2h5d3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MDM1NDgsImV4cCI6MjA5NTk3OTU0OH0.NUwIIhKfqILel1a12HL2NYS-R-iky0E2U7o9tlgtKac';
+const COLORS = ['#286140','#B58500','#A32D2D','#185FA5','#534AB7','#0F6E56','#993556','#7A4700'];
+const CAT_AR = {'geopolitical':'جيوسياسي','economic':'اقتصادي','saudi_local':'محلي'};
+
+async function sbFetch(table, params='') {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`
+    }
+  });
+  return res.json();
+}
+
+async function loadData() {
+  const [interest, trending, related] = await Promise.all([
+    sbFetch('trends_interest', 'select=keyword,category,date,interest&order=date.asc&limit=2000'),
+    sbFetch('trends_trending', 'select=keyword,rank&order=rank.asc&limit=20'),
+    sbFetch('trends_related', 'select=main_keyword,related_query,value,query_type,category&query_type=eq.rising&order=value.desc&limit=30')
+  ]);
+  return { interest, trending, related };
+}
+
+function buildKwMap(interest) {
+  const map = {};
+  for (const row of interest) {
+    if (!map[row.keyword]) map[row.keyword] = { cat: row.category, dates: [], values: [] };
+    map[row.keyword].dates.push(row.date);
+    map[row.keyword].values.push(row.interest);
+  }
+  return map;
+}
+
+function catClass(c) {
+  return c==='geopolitical'?'badge-geo':c==='economic'?'badge-eco':'badge-sa';
+}
+
+let mainChart = null, cmpChart = null;
+let KW_DATA = {}, TRENDING = [], RELATED = [];
+let activeKws = [], activeCat = 'all';
+
+function getLabels(kwMap) {
+  const allDates = new Set();
+  for (const kw of Object.values(kwMap)) kw.dates.forEach(d => allDates.add(d));
+  return Array.from(allDates).sort();
+}
+
+function getValues(kwData, labels) {
+  const dateToVal = {};
+  kwData.dates.forEach((d, i) => dateToVal[d] = kwData.values[i]);
+  return labels.map(l => dateToVal[l] ?? 0);
+}
+
+function filteredKws() {
+  return activeKws.filter(k => activeCat === 'all' || (KW_DATA[k] && KW_DATA[k].cat === activeCat));
+}
+
+function renderKwTags() {
+  document.getElementById('kwTags').innerHTML = filteredKws().map(k =>
+    `<span class="tag"><span class="${catClass(KW_DATA[k]?.cat||'saudi_local')}">${CAT_AR[KW_DATA[k]?.cat]||''}</span> ${k}</span>`
+  ).join('');
+}
+
+function renderMainChart(labels) {
+  const kws = filteredKws().slice(0, 6);
+  const datasets = kws.map((k, i) => ({
+    label: k,
+    data: getValues(KW_DATA[k], labels),
+    borderColor: COLORS[i % COLORS.length],
+    backgroundColor: COLORS[i % COLORS.length] + '15',
+    borderWidth: 2, pointRadius: 0, fill: false, tension: 0.4
+  }));
+  document.getElementById('mainLegend').innerHTML = kws.map((k, i) =>
+    `<span style="display:flex;align-items:center;gap:4px"><span class="leg-dot" style="background:${COLORS[i%COLORS.length]}"></span>${k}</span>`
+  ).join('');
+  if (mainChart) mainChart.destroy();
+  mainChart = new Chart(document.getElementById('mainChart'), {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+      scales: {
+        x: { ticks: { maxTicksLimit: 8, color: '#6B6860', font: { size: 10 } }, grid: { color: 'rgba(0,0,0,.06)' } },
+        y: { min: 0, max: 100, ticks: { color: '#6B6860', font: { size: 10 } }, grid: { color: 'rgba(0,0,0,.06)' } }
+      }
+    }
+  });
+}
+
+function updateCompare(labels) {
+  const k1 = document.getElementById('cmp1')?.value || activeKws[0];
+  const k2 = document.getElementById('cmp2')?.value || activeKws[1] || activeKws[0];
+  const d1 = KW_DATA[k1] ? getValues(KW_DATA[k1], labels) : Array(labels.length).fill(0);
+  const d2 = KW_DATA[k2] ? getValues(KW_DATA[k2], labels) : Array(labels.length).fill(0);
+  document.getElementById('cmpLegend').innerHTML =
+    `<span><span class="leg-dot" style="background:#286140"></span>${k1}</span><span><span class="leg-dot" style="background:#B58500"></span>${k2}</span>`;
+  if (cmpChart) cmpChart.destroy();
+  cmpChart = new Chart(document.getElementById('cmpChart'), {
+    type: 'line',
+    data: { labels, datasets: [
+      { label: k1, data: d1, borderColor: '#286140', backgroundColor: '#28614015', borderWidth: 2, pointRadius: 0, tension: 0.4 },
+      { label: k2, data: d2, borderColor: '#B58500', backgroundColor: '#B5850015', borderWidth: 2, pointRadius: 0, tension: 0.4, borderDash: [5,3] }
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { maxTicksLimit: 5, color: '#6B6860', font: { size: 10 } }, grid: { color: 'rgba(0,0,0,.06)' } },
+        y: { min: 0, max: 100, ticks: { color: '#6B6860', font: { size: 10 } }, grid: { color: 'rgba(0,0,0,.06)' } }
+      }
+    }
+  });
+}
+
+function renderTrending() {
+  if (!TRENDING.length) { document.getElementById('trendingList').innerHTML = '<p style="font-size:13px;color:#6B6860;padding:8px 0">لا بيانات متاحة</p>'; return; }
+  document.getElementById('trendingList').innerHTML = TRENDING.map((t, i) =>
+    `<div class="kw-row"><span class="kw-rank">#${t.rank||i+1}</span><span class="kw-name">${t.keyword}</span><span style="font-size:11px;color:${i<3?'#A32D2D':'#6B6860'}">${i<3?'🔴':''}</span></div>`
+  ).join('');
+}
+
+function renderRising() {
+  if (!RELATED.length) { document.getElementById('risingList').innerHTML = '<p style="font-size:13px;color:#6B6860;padding:8px 0">لا بيانات متاحة</p>'; return; }
+  document.getElementById('risingList').innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+    RELATED.map(r =>
+      `<div class="rising-row"><span class="${catClass(r.category)}" style="min-width:48px">${CAT_AR[r.category]||''}</span><span style="flex:1;font-size:12px">${r.related_query}</span><span class="rising-pct">↑${r.value}%</span></div>`
+    ).join('') + '</div>';
+}
+
+function renderSpikes() {
+  const spikes = [];
+  for (const [kw, d] of Object.entries(KW_DATA)) {
+    if (d.values.length >= 14) {
+      const recent = d.values.slice(-7), prev = d.values.slice(-14, -7);
+      const diff = Math.round(recent.reduce((a,b)=>a+b,0)/recent.length - prev.reduce((a,b)=>a+b,0)/prev.length);
+      if (diff > 30) spikes.push([kw, diff]);
+    }
+  }
+  const sec = document.getElementById('alertsSection');
+  if (!spikes.length) { sec.style.display = 'none'; return; }
+  sec.style.display = '';
+  document.getElementById('alertsList').innerHTML = spikes.map(([kw, diff]) =>
+    `<div class="alert">🔴 <strong>${kw}</strong> — ارتفص ${diff}+ نقطة في آخر 7 أيام</div>`
+  ).join('');
+  document.getElementById('spikeCount').textContent = spikes.length;
+}
+
+function renderHeatmap(labels) {
+  const kw = document.getElementById('hmKw')?.value || activeKws[0];
+  const vals = KW_DATA[kw] ? getValues(KW_DATA[kw], labels).slice(-28) : Array(28).fill(0);
+  const mx = Math.max(...vals, 1);
+  document.getElementById('heatmapGrid').innerHTML = vals.map(v => {
+    const alpha = (0.15 + (v/mx) * 0.85).toFixed(2);
+    return `<div class="hm-cell" style="background:rgba(40,97,64,${alpha})" title="${v}"></div>`;
+  }).join('');
+}
+
+function buildUI(kwMap, labels) {
+  const kwKeys = Object.keys(kwMap);
+  const topTerm = kwKeys.reduce((a, b) => (Math.max(...(kwMap[b]?.values||[0])) > Math.max(...(kwMap[a]?.values||[0])) ? b : a), kwKeys[0] || '—');
+  const allVals = Object.values(kwMap).flatMap(d => d.values);
+  const avgInterest = allVals.length ? Math.round(allVals.reduce((a,b)=>a+b,0)/allVals.length) : 0;
+
+  document.getElementById('mainContent').innerHTML = `
   <section>
     <div class="sec-label">📊 ملخص / Summary</div>
     <div class="kpi-grid">
-      <div class="kpi"><div class="kpi-label">أعلى مصطلح / Top term</div><div class="kpi-val" style="font-size:16px;margin-top:4px">Israel Gaza</div></div>
-      <div class="kpi"><div class="kpi-label">مصطلحات / Tracked</div><div class="kpi-val">5</div><div class="kpi-sub">عبر 3 فئات</div></div>
-      <div class="kpi" style="border-top-color:var(--red)"><div class="kpi-label">ارتفاع مفاجئ / Spikes</div><div class="kpi-val" style="color:var(--red)">1</div><div class="kpi-sub">آخر 7 أيام</div></div>
-      <div class="kpi" style="border-top-color:var(--gold)"><div class="kpi-label">متوسط / Avg interest</div><div class="kpi-val" style="color:var(--gold-dark)">24</div><div class="kpi-sub">من 100</div></div>
+      <div class="kpi"><div class="kpi-label">أعمى مصطلح / Top term</div><div class="kpi-val" style="font-size:16px;margin-top:4px">${topTerm}</div></div>
+      <div class="kpi"><div class="kpi-label">مصطلحات / Tracked</div><div class="kpi-val">${kwKeys.length}</div><div class="kpi-sub">عبر 3 فئات</div></div>
+      <div class="kpi" style="border-top-color:var(--red)"><div class="kpi-label">ارتفاع مفاجئ / Spikes</div><div class="kpi-val" style="color:var(--red)" id="spikeCount">0</div><div class="kpi-sub">آخر 7 أيام</div></div>
+      <div class="kpi" style="border-top-color:var(--gold)"><div class="kpi-label">متوسط / Avg interest</div><div class="kpi-val" style="color:var(--gold-dark)">${avgInterest}</div><div class="kpi-sub">من 100</div></div>
     </div>
   </section>
 
-  <section >
+  <section id="alertsSection" style="display:none">
     <div class="sec-label">🚨 تنبيهات / Alerts</div>
-    <div class="alert">🔴 <strong>Saudi Aramco</strong> — ارتفع +40 نقطة / +40 pts in 7 days</div>
+    <div id="alertsList"></div>
   </section>
 
   <section>
@@ -92,24 +258,20 @@ main{max-width:1300px;margin:0 auto;padding:24px 20px;display:grid;gap:24px}
     <div class="card">
       <div class="chips" id="catChips">
         <span class="chip active" onclick="filterCat('all',this)">الكل / All</span>
-        <span class="chip" onclick="filterCat('geopolitical',this)">جيوسياسي / Geopolitical</span>
-        <span class="chip" onclick="filterCat('economic',this)">اقتصادي / Economic</span>
-        <span class="chip" onclick="filterCat('saudi_local',this)">محلي / Local</span>
+        <span class="chip" onclick="filterCat('geopolitical',this)">جيوسياسي</span>
+        <span class="chip" onclick="filterCat('economic',this)">اقتصادي</span>
+        <span class="chip" onclick="filterCat('saudi_local',this)">محلي</span>
       </div>
       <div id="kwTags"></div>
-      <div class="add-kw">
-        <input type="text" id="kwInput" placeholder="أضف كلمة... / Add keyword..." onkeydown="if(event.key==='Enter')addKw()">
-        <button onclick="addKw()">+ إضافة</button>
-      </div>
     </div>
   </section>
 
   <section>
-    <div class="sec-label">📈 الاهتمام عبر الزمن / Interest over time — 90 days</div>
+    <div class="sec-label">📈 الاهتمام عبر الزمن / Interest over time</div>
     <div class="card">
       <div class="cmp-legend" id="mainLegend"></div>
       <div style="position:relative;width:100%;height:240px">
-        <canvas id="mainChart" role="img" aria-label="مخطط الاهتمام بالكلمات المفتاحية">بيانات الاهتمام.</canvas>
+        <canvas id="mainChart"></canvas>
       </div>
     </div>
   </section>
@@ -119,14 +281,12 @@ main{max-width:1300px;margin:0 auto;padding:24px 20px;display:grid;gap:24px}
       <div class="sec-label">⚖️ مقارنة / Compare</div>
       <div class="card">
         <div class="filter-row">
-          <select id="cmp1" onchange="updateCompare()"><option>Israel Gaza</option><option>Iran war</option><option>oil price</option><option>Saudi Aramco</option><option>Vision 2030</option></select>
+          <select id="cmp1" onchange="updateCompare(CURRENT_LABELS)">${kwKeys.map(k=>`<option>${k}</option>`).join('')}</select>
           <span style="font-size:13px;color:var(--muted)">vs</span>
-          <select id="cmp2" onchange="updateCompare()"><option>Iran war</option><option>oil price</option><option>Saudi Aramco</option><option>Vision 2030</option></select>
+          <select id="cmp2" onchange="updateCompare(CURRENT_LABELS)">${kwKeys.slice(1).map(k=>`<option>${k}</option>`).join('')}</select>
         </div>
         <div class="cmp-legend" id="cmpLegend"></div>
-        <div style="position:relative;width:100%;height:180px">
-          <canvas id="cmpChart" role="img" aria-label="مقارنة بين مصطلحين">بيانات المقارنة.</canvas>
-        </div>
+        <div style="position:relative;width:100%;height:180px"><canvas id="cmpChart"></canvas></div>
       </div>
     </section>
     <section>
@@ -137,77 +297,78 @@ main{max-width:1300px;margin:0 auto;padding:24px 20px;display:grid;gap:24px}
 
   <div class="grid2">
     <section>
-      <div class="sec-label">📅 Heatmap أسبوعي / Weekly heatmap</div>
+      <div class="sec-label">📅 Heatmap أسبوعي</div>
       <div class="card">
-        <div class="filter-row"><select id="hmKw" onchange="renderHeatmap()"><option>Israel Gaza</option><option>Iran war</option><option>oil price</option><option>Saudi Aramco</option><option>Vision 2030</option></select></div>
+        <div class="filter-row"><select id="hmKw" onchange="renderHeatmap(CURRENT_LABELS)">${kwKeys.map(k=>`<option>${k}</option>`).join('')}</select></div>
         <div class="hm-days"><div class="hm-day">سبت</div><div class="hm-day">أحد</div><div class="hm-day">اثنين</div><div class="hm-day">ثلاثاء</div><div class="hm-day">أربعاء</div><div class="hm-day">خميس</div><div class="hm-day">جمعة</div></div>
         <div class="heatmap" id="heatmapGrid"></div>
-        <div class="leg"><span>منخفض</span><div class="leg-grad"></div><span>مرتفع</span></div>
+        <div class="leg"><span>منخفض</span><div class="leg-grad"></div><span>مرتفص</span></div>
       </div>
     </section>
     <section>
-      <div class="sec-label">📍 مناطق البحث / Search regions (SA)</div>
-      <div class="card" id="regionList"></div>
+      <div class="sec-label">🚀 استفسارا֪ صاعدة / Rising queries</div>
+      <div class="card"><div id="risingList"></div></div>
     </section>
-  </div>
+  </div>`;
 
-  <section>
-    <div class="sec-label">🚀 استفسارات صاعدة / Rising queries</div>
-    <div class="card"><div id="risingList"></div></div>
-  </section>
+  window.filterCat = function(cat, el) {
+    activeCat = cat;
+    document.querySelectorAll('#catChips .chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    renderKwTags();
+    renderMainChart(CURRENT_LABELS);
+  };
+}
 
-</main>
-<script>
-const KW_DATA={"Israel Gaza": {"cat": "geopolitical", "dates": ["2026-03-15", "2026-03-16", "2026-03-16", "2026-03-17", "2026-03-17", "2026-03-18", "2026-03-18", "2026-03-19", "2026-03-19", "2026-03-20", "2026-03-20", "2026-03-21", "2026-03-21", "2026-03-22", "2026-03-22", "2026-03-23", "2026-03-23", "2026-03-24", "2026-03-24", "2026-03-25", "2026-03-25", "2026-03-26", "2026-03-26", "2026-03-27", "2026-03-27", "2026-03-28", "2026-03-28", "2026-03-29", "2026-03-29", "2026-03-30", "2026-03-30", "2026-03-31", "2026-03-31", "2026-04-01", "2026-04-01", "2026-04-02", "2026-04-02", "2026-04-03", "2026-04-03", "2026-04-04", "2026-04-04", "2026-04-05", "2026-04-05", "2026-04-06", "2026-04-06", "2026-04-07", "2026-04-07", "2026-04-08", "2026-04-08", "2026-04-09", "2026-04-09", "2026-04-10", "2026-04-10", "2026-04-11", "2026-04-11", "2026-04-12", "2026-04-12", "2026-04-13", "2026-04-13", "2026-04-14", "2026-04-14", "2026-04-15", "2026-04-15", "2026-04-16", "2026-04-16", "2026-04-17", "2026-04-17", "2026-04-18", "2026-04-18", "2026-04-19", "2026-04-19", "2026-04-20", "2026-04-20", "2026-04-21", "2026-04-21", "2026-04-22", "2026-04-22", "2026-04-23", "2026-04-23", "2026-04-24", "2026-04-24", "2026-04-25", "2026-04-25", "2026-04-26", "2026-04-26", "2026-04-27", "2026-04-27", "2026-04-28", "2026-04-28", "2026-04-29", "2026-04-29", "2026-04-30", "2026-04-30", "2026-05-01", "2026-05-01", "2026-05-02", "2026-05-02", "2026-05-03", "2026-05-03", "2026-05-04", "2026-05-04", "2026-05-05", "2026-05-05", "2026-05-06", "2026-05-06", "2026-05-07", "2026-05-07", "2026-05-08", "2026-05-08", "2026-05-09", "2026-05-09", "2026-05-10", "2026-05-10", "2026-05-11", "2026-05-11", "2026-05-12", "2026-05-12", "2026-05-13", "2026-05-13", "2026-05-14", "2026-05-14", "2026-05-15", "2026-05-15", "2026-05-16", "2026-05-16", "2026-05-17", "2026-05-17", "2026-05-18", "2026-05-18", "2026-05-19", "2026-05-19", "2026-05-20", "2026-05-20", "2026-05-21", "2026-05-21", "2026-05-22", "2026-05-22", "2026-05-23", "2026-05-23", "2026-05-24", "2026-05-24", "2026-05-25", "2026-05-25", "2026-05-26", "2026-05-26", "2026-05-27", "2026-05-27", "2026-05-28", "2026-05-28", "2026-05-29", "2026-05-29", "2026-05-30", "2026-05-30", "2026-05-31", "2026-05-31", "2026-06-01", "2026-06-01", "2026-06-02", "2026-06-02", "2026-06-03", "2026-06-03", "2026-06-04", "2026-06-04", "2026-06-05", "2026-06-05", "2026-06-06", "2026-06-06", "2026-06-07", "2026-06-07", "2026-06-08", "2026-06-08", "2026-06-09", "2026-06-09", "2026-06-10", "2026-06-10"], "values": [79, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 81, 0, 76, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 85, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 78, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 0, 5, 0, 7, 0, 0, 0, 0, 6, 0, 6, 6, 0, 6, 6, 7, 5, 0, 6]}, "Iran war": {"cat": "geopolitical", "dates": ["2026-03-15", "2026-03-16", "2026-03-16", "2026-03-17", "2026-03-17", "2026-03-18", "2026-03-18", "2026-03-19", "2026-03-19", "2026-03-20", "2026-03-20", "2026-03-21", "2026-03-21", "2026-03-22", "2026-03-22", "2026-03-23", "2026-03-23", "2026-03-24", "2026-03-24", "2026-03-25", "2026-03-25", "2026-03-26", "2026-03-26", "2026-03-27", "2026-03-27", "2026-03-28", "2026-03-28", "2026-03-29", "2026-03-29", "2026-03-30", "2026-03-30", "2026-03-31", "2026-03-31", "2026-04-01", "2026-04-01", "2026-04-02", "2026-04-02", "2026-04-03", "2026-04-03", "2026-04-04", "2026-04-04", "2026-04-05", "2026-04-05", "2026-04-06", "2026-04-06", "2026-04-07", "2026-04-07", "2026-04-08", "2026-04-08", "2026-04-09", "2026-04-09", "2026-04-10", "2026-04-10", "2026-04-11", "2026-04-11", "2026-04-12", "2026-04-12", "2026-04-13", "2026-04-13", "2026-04-14", "2026-04-14", "2026-04-15", "2026-04-15", "2026-04-16", "2026-04-16", "2026-04-17", "2026-04-17", "2026-04-18", "2026-04-18", "2026-04-19", "2026-04-19", "2026-04-20", "2026-04-20", "2026-04-21", "2026-04-21", "2026-04-22", "2026-04-22", "2026-04-23", "2026-04-23", "2026-04-24", "2026-04-24", "2026-04-25", "2026-04-25", "2026-04-26", "2026-04-26", "2026-04-27", "2026-04-27", "2026-04-28", "2026-04-28", "2026-04-29", "2026-04-29", "2026-04-30", "2026-04-30", "2026-05-01", "2026-05-01", "2026-05-02", "2026-05-02", "2026-05-03", "2026-05-03", "2026-05-04", "2026-05-04", "2026-05-05", "2026-05-05", "2026-05-06", "2026-05-06", "2026-05-07", "2026-05-07", "2026-05-08", "2026-05-08", "2026-05-09", "2026-05-09", "2026-05-10", "2026-05-10", "2026-05-11", "2026-05-11", "2026-05-12", "2026-05-12", "2026-05-13", "2026-05-13", "2026-05-14", "2026-05-14", "2026-05-15", "2026-05-15", "2026-05-16", "2026-05-16", "2026-05-17", "2026-05-17", "2026-05-18", "2026-05-18", "2026-05-19", "2026-05-19", "2026-05-20", "2026-05-20", "2026-05-21", "2026-05-21", "2026-05-22", "2026-05-22", "2026-05-23", "2026-05-23", "2026-05-24", "2026-05-24", "2026-05-25", "2026-05-25", "2026-05-26", "2026-05-26", "2026-05-27", "2026-05-27", "2026-05-28", "2026-05-28", "2026-05-29", "2026-05-29", "2026-05-30", "2026-05-30", "2026-05-31", "2026-05-31", "2026-06-01", "2026-06-01", "2026-06-02", "2026-06-02", "2026-06-03", "2026-06-03", "2026-06-04", "2026-06-04", "2026-06-05", "2026-06-05", "2026-06-06", "2026-06-06", "2026-06-07", "2026-06-07", "2026-06-08", "2026-06-08", "2026-06-09", "2026-06-09", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11"], "values": [60, 55, 59, 59, 55, 66, 68, 56, 58, 52, 54, 51, 51, 70, 66, 74, 80, 57, 53, 57, 58, 65, 67, 46, 45, 50, 51, 47, 48, 53, 50, 55, 60, 53, 55, 40, 41, 44, 44, 39, 42, 48, 44, 48, 49, 100, 100, 75, 72, 34, 36, 25, 23, 30, 32, 40, 39, 21, 21, 25, 24, 20, 19, 19, 19, 27, 29, 20, 20, 26, 25, 28, 30, 29, 29, 17, 18, 16, 18, 22, 22, 19, 22, 17, 17, 17, 17, 12, 12, 9, 11, 8, 7, 14, 13, 18, 19, 15, 16, 19, 18, 17, 17, 14, 14, 16, 16, 19, 19, 9, 11, 11, 13, 16, 16, 14, 13, 10, 9, 19, 20, 7, 6, 6, 8, 8, 8, 8, 8, 10, 9, 9, 9, 10, 12, 11, 9, 15, 16, 14, 16, 8, 7, 8, 7, 15, 12, 15, 17, 14, 14, 12, 11, 13, 14, 10, 14, 7, 7, 16, 17, 11, 11, 7, 7, 7, 7, 10, 10, 18, 18, 9, 10, 14, 15, 40, 34, 39, 20, 26, 21, 31, 20, 33, 28, 23, 29, 53, 42, 31, 45, 47, 100, 82, 64, 63, 43, 34, 43, 37, 41, 22, 28, 20, 0, 24, 28, 43, 47, 72, 54, 41, 16]}, "oil price": {"cat": "economic", "dates": ["2026-03-15", "2026-03-16", "2026-03-16", "2026-03-17", "2026-03-17", "2026-03-18", "2026-03-18", "2026-03-19", "2026-03-19", "2026-03-20", "2026-03-20", "2026-03-21", "2026-03-21", "2026-03-22", "2026-03-22", "2026-03-23", "2026-03-23", "2026-03-24", "2026-03-24", "2026-03-25", "2026-03-25", "2026-03-26", "2026-03-26", "2026-03-27", "2026-03-27", "2026-03-28", "2026-03-28", "2026-03-29", "2026-03-29", "2026-03-30", "2026-03-30", "2026-03-31", "2026-03-31", "2026-04-01", "2026-04-01", "2026-04-02", "2026-04-02", "2026-04-03", "2026-04-03", "2026-04-04", "2026-04-04", "2026-04-05", "2026-04-05", "2026-04-06", "2026-04-06", "2026-04-07", "2026-04-07", "2026-04-08", "2026-04-08", "2026-04-09", "2026-04-09", "2026-04-10", "2026-04-10", "2026-04-11", "2026-04-11", "2026-04-12", "2026-04-12", "2026-04-13", "2026-04-13", "2026-04-14", "2026-04-14", "2026-04-15", "2026-04-15", "2026-04-16", "2026-04-16", "2026-04-17", "2026-04-17", "2026-04-18", "2026-04-18", "2026-04-19", "2026-04-19", "2026-04-20", "2026-04-20", "2026-04-21", "2026-04-21", "2026-04-22", "2026-04-22", "2026-04-23", "2026-04-23", "2026-04-24", "2026-04-24", "2026-04-25", "2026-04-25", "2026-04-26", "2026-04-26", "2026-04-27", "2026-04-27", "2026-04-28", "2026-04-28", "2026-04-29", "2026-04-29", "2026-04-30", "2026-04-30", "2026-05-01", "2026-05-01", "2026-05-02", "2026-05-02", "2026-05-03", "2026-05-03", "2026-05-04", "2026-05-04", "2026-05-05", "2026-05-05", "2026-05-06", "2026-05-06", "2026-05-07", "2026-05-07", "2026-05-08", "2026-05-08", "2026-05-09", "2026-05-09", "2026-05-10", "2026-05-10", "2026-05-11", "2026-05-11", "2026-05-12", "2026-05-12", "2026-05-13", "2026-05-13", "2026-05-14", "2026-05-14", "2026-05-15", "2026-05-15", "2026-05-16", "2026-05-16", "2026-05-17", "2026-05-17", "2026-05-18", "2026-05-18", "2026-05-19", "2026-05-19", "2026-05-20", "2026-05-20", "2026-05-21", "2026-05-21", "2026-05-22", "2026-05-22", "2026-05-23", "2026-05-23", "2026-05-24", "2026-05-24", "2026-05-25", "2026-05-25", "2026-05-26", "2026-05-26", "2026-05-27", "2026-05-27", "2026-05-28", "2026-05-28", "2026-05-29", "2026-05-29", "2026-05-30", "2026-05-30", "2026-05-31", "2026-05-31", "2026-06-01", "2026-06-01", "2026-06-02", "2026-06-02", "2026-06-03", "2026-06-03", "2026-06-04", "2026-06-04", "2026-06-05", "2026-06-05", "2026-06-06", "2026-06-06", "2026-06-07", "2026-06-07", "2026-06-08", "2026-06-08", "2026-06-09", "2026-06-09", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11"], "values": [66, 76, 74, 62, 62, 93, 90, 86, 90, 70, 73, 60, 61, 67, 64, 100, 100, 63, 66, 54, 55, 54, 56, 60, 55, 48, 47, 58, 58, 72, 76, 85, 87, 56, 55, 70, 73, 75, 72, 39, 40, 42, 40, 53, 56, 71, 75, 86, 89, 54, 53, 44, 39, 26, 27, 37, 37, 42, 39, 36, 36, 29, 26, 24, 31, 57, 61, 38, 37, 27, 26, 37, 35, 37, 36, 30, 32, 39, 36, 32, 29, 18, 22, 22, 23, 25, 22, 34, 36, 43, 37, 46, 44, 32, 33, 23, 22, 22, 23, 32, 33, 32, 30, 28, 27, 26, 25, 27, 30, 18, 21, 16, 16, 30, 28, 17, 18, 24, 26, 18, 19, 21, 21, 16, 15, 16, 15, 21, 22, 22, 22, 14, 19, 17, 19, 26, 24, 15, 18, 19, 18, 21, 23, 17, 19, 13, 11, 21, 20, 19, 18, 14, 11, 20, 20, 16, 23, 13, 13, 13, 13, 10, 11, 12, 13, 8, 8, 10, 9, 16, 16, 12, 11, 15, 15, 71, 64, 69, 52, 48, 32, 0, 56, 52, 27, 46, 28, 39, 20, 33, 21, 38, 29, 39, 42, 48, 27, 42, 44, 21, 38, 31, 43, 16, 49]}, "Saudi Aramco": {"cat": "economic", "dates": ["2026-03-15", "2026-03-16", "2026-03-16", "2026-03-17", "2026-03-17", "2026-03-18", "2026-03-18", "2026-03-19", "2026-03-19", "2026-03-20", "2026-03-20", "2026-03-21", "2026-03-21", "2026-03-22", "2026-03-22", "2026-03-23", "2026-03-23", "2026-03-24", "2026-03-24", "2026-03-25", "2026-03-25", "2026-03-26", "2026-03-26", "2026-03-27", "2026-03-27", "2026-03-28", "2026-03-28", "2026-03-29", "2026-03-29", "2026-03-30", "2026-03-30", "2026-03-31", "2026-03-31", "2026-04-01", "2026-04-01", "2026-04-02", "2026-04-02", "2026-04-03", "2026-04-03", "2026-04-04", "2026-04-04", "2026-04-05", "2026-04-05", "2026-04-06", "2026-04-06", "2026-04-07", "2026-04-07", "2026-04-08", "2026-04-08", "2026-04-09", "2026-04-09", "2026-04-10", "2026-04-10", "2026-04-11", "2026-04-11", "2026-04-12", "2026-04-12", "2026-04-13", "2026-04-13", "2026-04-14", "2026-04-14", "2026-04-15", "2026-04-15", "2026-04-16", "2026-04-16", "2026-04-17", "2026-04-17", "2026-04-18", "2026-04-18", "2026-04-19", "2026-04-19", "2026-04-20", "2026-04-20", "2026-04-21", "2026-04-21", "2026-04-22", "2026-04-22", "2026-04-23", "2026-04-23", "2026-04-24", "2026-04-24", "2026-04-25", "2026-04-25", "2026-04-26", "2026-04-26", "2026-04-27", "2026-04-27", "2026-04-28", "2026-04-28", "2026-04-29", "2026-04-29", "2026-04-30", "2026-04-30", "2026-05-01", "2026-05-01", "2026-05-02", "2026-05-02", "2026-05-03", "2026-05-03", "2026-05-04", "2026-05-04", "2026-05-05", "2026-05-05", "2026-05-06", "2026-05-06", "2026-05-07", "2026-05-07", "2026-05-08", "2026-05-08", "2026-05-09", "2026-05-09", "2026-05-10", "2026-05-10", "2026-05-11", "2026-05-11", "2026-05-12", "2026-05-12", "2026-05-13", "2026-05-13", "2026-05-14", "2026-05-14", "2026-05-15", "2026-05-15", "2026-05-16", "2026-05-16", "2026-05-17", "2026-05-17", "2026-05-18", "2026-05-18", "2026-05-19", "2026-05-19", "2026-05-20", "2026-05-20", "2026-05-21", "2026-05-21", "2026-05-22", "2026-05-22", "2026-05-23", "2026-05-23", "2026-05-24", "2026-05-24", "2026-05-25", "2026-05-25", "2026-05-26", "2026-05-26", "2026-05-27", "2026-05-27", "2026-05-28", "2026-05-28", "2026-05-29", "2026-05-29", "2026-05-30", "2026-05-30", "2026-05-31", "2026-05-31", "2026-06-01", "2026-06-01", "2026-06-02", "2026-06-02", "2026-06-03", "2026-06-03", "2026-06-04", "2026-06-04", "2026-06-05", "2026-06-05", "2026-06-06", "2026-06-06", "2026-06-07", "2026-06-07", "2026-06-08", "2026-06-08", "2026-06-09", "2026-06-09", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11"], "values": [52, 33, 37, 42, 37, 48, 44, 61, 87, 60, 36, 33, 34, 31, 0, 25, 30, 34, 31, 46, 38, 22, 0, 25, 20, 39, 40, 41, 43, 41, 25, 64, 57, 43, 40, 34, 32, 31, 24, 29, 30, 41, 41, 42, 43, 49, 44, 36, 32, 23, 25, 49, 47, 100, 100, 54, 59, 43, 37, 25, 24, 39, 37, 26, 23, 33, 29, 25, 31, 41, 51, 26, 25, 27, 25, 44, 44, 28, 28, 0, 0, 20, 20, 31, 38, 30, 30, 42, 37, 31, 34, 35, 32, 0, 19, 36, 32, 23, 18, 25, 32, 36, 37, 33, 33, 28, 28, 25, 24, 28, 29, 52, 51, 76, 79, 42, 44, 37, 34, 33, 33, 22, 26, 37, 19, 29, 22, 36, 31, 19, 22, 29, 23, 36, 31, 26, 21, 20, 21, 25, 26, 32, 34, 26, 19, 0, 0, 0, 0, 0, 0, 0, 19, 30, 37, 28, 33, 27, 28, 23, 24, 22, 22, 15, 15, 18, 18, 27, 28, 29, 28, 25, 25, 26, 26, 38, 72, 55, 51, 45, 49, 35, 0, 40, 39, 35, 0, 0, 0, 0, 0, 0, 0, 93, 100, 60, 0, 0, 25, 0]}, "Vision 2030": {"cat": "economic", "dates": ["2026-03-15", "2026-03-16", "2026-03-16", "2026-03-17", "2026-03-17", "2026-03-18", "2026-03-18", "2026-03-19", "2026-03-19", "2026-03-20", "2026-03-20", "2026-03-21", "2026-03-21", "2026-03-22", "2026-03-22", "2026-03-23", "2026-03-23", "2026-03-24", "2026-03-24", "2026-03-25", "2026-03-25", "2026-03-26", "2026-03-26", "2026-03-27", "2026-03-27", "2026-03-28", "2026-03-28", "2026-03-29", "2026-03-29", "2026-03-30", "2026-03-30", "2026-03-31", "2026-03-31", "2026-04-01", "2026-04-01", "2026-04-02", "2026-04-02", "2026-04-03", "2026-04-03", "2026-04-04", "2026-04-04", "2026-04-05", "2026-04-05", "2026-04-06", "2026-04-06", "2026-04-07", "2026-04-07", "2026-04-08", "2026-04-08", "2026-04-09", "2026-04-09", "2026-04-10", "2026-04-10", "2026-04-11", "2026-04-11", "2026-04-12", "2026-04-12", "2026-04-13", "2026-04-13", "2026-04-14", "2026-04-14", "2026-04-15", "2026-04-15", "2026-04-16", "2026-04-16", "2026-04-17", "2026-04-17", "2026-04-18", "2026-04-18", "2026-04-19", "2026-04-19", "2026-04-20", "2026-04-20", "2026-04-21", "2026-04-21", "2026-04-22", "2026-04-22", "2026-04-23", "2026-04-23", "2026-04-24", "2026-04-24", "2026-04-25", "2026-04-25", "2026-04-26", "2026-04-26", "2026-04-27", "2026-04-27", "2026-04-28", "2026-04-28", "2026-04-29", "2026-04-29", "2026-04-30", "2026-04-30", "2026-05-01", "2026-05-01", "2026-05-02", "2026-05-02", "2026-05-03", "2026-05-03", "2026-05-04", "2026-05-04", "2026-05-05", "2026-05-05", "2026-05-06", "2026-05-06", "2026-05-07", "2026-05-07", "2026-05-08", "2026-05-08", "2026-05-09", "2026-05-09", "2026-05-10", "2026-05-10", "2026-05-11", "2026-05-11", "2026-05-12", "2026-05-12", "2026-05-13", "2026-05-13", "2026-05-14", "2026-05-14", "2026-05-15", "2026-05-15", "2026-05-16", "2026-05-16", "2026-05-17", "2026-05-17", "2026-05-18", "2026-05-18", "2026-05-19", "2026-05-19", "2026-05-20", "2026-05-20", "2026-05-21", "2026-05-21", "2026-05-22", "2026-05-22", "2026-05-23", "2026-05-23", "2026-05-24", "2026-05-24", "2026-05-25", "2026-05-25", "2026-05-26", "2026-05-26", "2026-05-27", "2026-05-27", "2026-05-28", "2026-05-28", "2026-05-29", "2026-05-29", "2026-05-30", "2026-05-30", "2026-05-31", "2026-05-31", "2026-06-01", "2026-06-01", "2026-06-02", "2026-06-02", "2026-06-03", "2026-06-03", "2026-06-04", "2026-06-04", "2026-06-05", "2026-06-05", "2026-06-06", "2026-06-06", "2026-06-07", "2026-06-07", "2026-06-08", "2026-06-08", "2026-06-09", "2026-06-09", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-10", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11", "2026-06-11"], "values": [0, 0, 0, 76, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 70, 0, 0, 0, 61, 75, 0, 0, 0, 0, 100, 0, 65, 0, 0, 0, 0, 0, 67, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 56, 85, 68, 0, 0, 73, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 71, 0, 74, 0, 0, 0, 0, 70, 61, 70, 64, 90, 74, 95, 0, 0, 0, 0, 0, 0, 0, 60, 0, 0, 0, 0, 0, 0, 0, 60, 0, 0, 72, 0, 0, 0, 0, 69, 87, 58, 61, 53, 56, 75, 62, 83, 70, 73, 0, 0, 0, 72, 66, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 62, 26, 0, 20, 22, 20, 20, 18, 17, 13, 14, 18, 19, 23, 24, 26, 26, 39, 40, 0, 0, 0, 0, 0, 0, 22, 0, 21, 0, 0, 0, 0, 0, 0, 0, 0, 67, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 0, 0, 0, 0]}};
-const TRENDING=[{"keyword": "الأرجنتين ضد الجزائر", "rank": 1}, {"keyword": "بلجيكا ضد مصر", "rank": 1}, {"keyword": "فرنسا ضد السنغال", "rank": 1}, {"keyword": "belgium vs egypt", "rank": 2}, {"keyword": "france vs senegal", "rank": 2}, {"keyword": "الاردن والنمسا", "rank": 2}, {"keyword": "اسبانيا والراس الاخضر", "rank": 3}, {"keyword": "عبدالاله العمري", "rank": 3}, {"keyword": "bangladesh vs australia", "rank": 3}, {"keyword": "العراق", "rank": 4}, {"keyword": "مباراة السعودية", "rank": 4}, {"keyword": "new zealand vs sri lanka", "rank": 4}, {"keyword": "france national football team", "rank": 5}, {"keyword": "austria vs jordan", "rank": 5}, {"keyword": "قصاص", "rank": 5}, {"keyword": "spain vs cabo verde", "rank": 6}, {"keyword": "iraq vs norway", "rank": 6}, {"keyword": "سالم الدوسري", "rank": 6}, {"keyword": "مدرب بلجيكا", "rank": 7}, {"keyword": "argentina national football team vs algeria national football team standings", "rank": 7}];
-const RELATED=[{"main_keyword": "Saudi Aramco", "related_query": "saudi aramco total refining and petrochemical co.", "value": 450200, "query_type": "rising", "category": "economic"}, {"main_keyword": "Vision 2030", "related_query": "which of the following can be a topic for the reading text page 60? the 2030 vision of saudi arabia. saudi dreams. the world in 2030.", "value": 248500, "query_type": "rising", "category": "economic"}, {"main_keyword": "Saudi Aramco", "related_query": "saudi aramco yanbu refinery", "value": 181300, "query_type": "rising", "category": "economic"}, {"main_keyword": "oil price", "related_query": "vedanta oil and gas share price", "value": 48050, "query_type": "rising", "category": "economic"}, {"main_keyword": "oil price", "related_query": "bbc news", "value": 47150, "query_type": "rising", "category": "economic"}, {"main_keyword": "Saudi Aramco", "related_query": "saudi aramco net worth", "value": 45800, "query_type": "rising", "category": "economic"}, {"main_keyword": "oil price", "related_query": "vedanta power share price", "value": 45150, "query_type": "rising", "category": "economic"}, {"main_keyword": "oil price", "related_query": "spcx robinhood", "value": 42150, "query_type": "rising", "category": "economic"}, {"main_keyword": "Saudi Aramco", "related_query": "aramco net worth", "value": 39750, "query_type": "rising", "category": "economic"}, {"main_keyword": "Iran war", "related_query": "latest news about iran war", "value": 39250, "query_type": "rising", "category": "geopolitical"}, {"main_keyword": "oil price", "related_query": "amazon india", "value": 34200, "query_type": "rising", "category": "economic"}, {"main_keyword": "Saudi Aramco", "related_query": "lidl near me", "value": 33700, "query_type": "rising", "category": "economic"}, {"main_keyword": "oil price", "related_query": "vedanta aluminium share price", "value": 32300, "query_type": "rising", "category": "economic"}, {"main_keyword": "Iran war", "related_query": "sar to php", "value": 28200, "query_type": "rising", "category": "geopolitical"}, {"main_keyword": "oil price", "related_query": "الجزيرة", "value": 27550, "query_type": "rising", "category": "economic"}, {"main_keyword": "oil price", "related_query": "bhaskar", "value": 27000, "query_type": "rising", "category": "economic"}, {"main_keyword": "Iran war", "related_query": "dhurandhar movie box office collection", "value": 26900, "query_type": "rising", "category": "geopolitical"}, {"main_keyword": "oil price", "related_query": "intc stock", "value": 25400, "query_type": "rising", "category": "economic"}, {"main_keyword": "Iran war", "related_query": "neom", "value": 24800, "query_type": "rising", "category": "geopolitical"}, {"main_keyword": "oil price", "related_query": "sensex", "value": 24450, "query_type": "rising", "category": "economic"}, {"main_keyword": "Iran war", "related_query": "vix now", "value": 23950, "query_type": "rising", "category": "geopolitical"}, {"main_keyword": "Iran war", "related_query": "dhurandhar movie box office collection", "value": 23700, "query_type": "rising", "category": "geopolitical"}, {"main_keyword": "Iran war", "related_query": "blockchain technology", "value": 23250, "query_type": "rising", "category": "geopolitical"}, {"main_keyword": "oil price", "related_query": "aramco tadawul", "value": 21600, "query_type": "rising", "category": "economic"}, {"main_keyword": "oil price", "related_query": "eur to sar", "value": 21400, "query_type": "rising", "category": "economic"}, {"main_keyword": "oil price", "related_query": "dollar to inr today", "value": 21350, "query_type": "rising", "category": "economic"}, {"main_keyword": "oil price", "related_query": "dow index", "value": 21250, "query_type": "rising", "category": "economic"}, {"main_keyword": "oil price", "related_query": "hdfc bank share price", "value": 21250, "query_type": "rising", "category": "economic"}, {"main_keyword": "oil price", "related_query": "usd to rupiah", "value": 21150, "query_type": "rising", "category": "economic"}, {"main_keyword": "Saudi Aramco", "related_query": "petro rabigh", "value": 20900, "query_type": "rising", "category": "economic"}];
-const COLORS=['#286140','#B58500','#A32D2D','#185FA5','#534AB7','#0F6E56','#993556','#7A4700'];
-let activeKws=Object.keys(KW_DATA),activeCat='all';
-const LABELS=(()=>{const a=[],now=new Date('2026-06-15');for(let i=89;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i);a.push(d.toLocaleDateString('ar-SA',{month:'short',day:'numeric'}));}return a;})();
-const CAT_AR={"geopolitical":"جيوسياسي","economic":"اقتصادي","saudi_local":"محلي"};
-function catClass(c){return c==='geopolitical'?'badge-geo':c==='economic'?'badge-eco':'badge-sa';}
-function filteredKws(){return activeKws.filter(k=>activeCat==='all'||(KW_DATA[k]&&KW_DATA[k].cat===activeCat));}
-function renderKwTags(){document.getElementById('kwTags').innerHTML=filteredKws().map(k=>`<span class="tag"><span class="${catClass(KW_DATA[k]?.cat||'saudi_local')}">${CAT_AR[KW_DATA[k]?.cat]||''}</span> ${k}<span class="tag-x" onclick="removeKw('${k}')">×</span></span>`).join('');}
-function addKw(){const inp=document.getElementById('kwInput'),v=inp.value.trim();if(!v||KW_DATA[v])return;const base=Math.floor(Math.random()*60)+20;KW_DATA[v]={cat:'saudi_local',dates:[],values:Array.from({length:90},()=>Math.min(100,Math.max(5,base+Math.floor(Math.random()*20)-10)))};activeKws.push(v);inp.value='';renderKwTags();renderMainChart();document.getElementById('trackedCount').textContent=activeKws.length;}
-function removeKw(k){activeKws=activeKws.filter(x=>x!==k);delete KW_DATA[k];renderKwTags();renderMainChart();}
-function filterCat(cat,el){activeCat=cat;document.querySelectorAll('#catChips .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderKwTags();renderMainChart();}
-let mainChart=null;
-function renderMainChart(){
-  const kws=filteredKws().slice(0,6);
-  const datasets=kws.map((k,i)=>{const d=KW_DATA[k];const vals=d.values&&d.values.length?d.values:Array(90).fill(0);return {label:k,data:vals,borderColor:COLORS[i%COLORS.length],backgroundColor:COLORS[i%COLORS.length]+'15',borderWidth:2,pointRadius:0,fill:false,tension:0.4};});
-  document.getElementById('mainLegend').innerHTML=kws.map((k,i)=>`<span style="display:flex;align-items:center;gap:4px"><span class="leg-dot" style="background:${COLORS[i%COLORS.length]}"></span>${k}</span>`).join('');
-  if(mainChart)mainChart.destroy();
-  mainChart=new Chart(document.getElementById('mainChart'),{type:'line',data:{labels:LABELS,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:{ticks:{maxTicksLimit:8,color:'#6B6860',font:{size:10}},grid:{color:'rgba(0,0,0,.06)'}},y:{min:0,max:100,ticks:{color:'#6B6860',font:{size:10}},grid:{color:'rgba(0,0,0,.06)'}}}}});
+let CURRENT_LABELS = [];
+
+async function init() {
+  try {
+    const { interest, trending, related } = await loadData();
+    KW_DATA = buildKwMap(interest);
+    TRENDING = trending;
+    RELATED = related;
+    activeKws = Object.keys(KW_DATA);
+    CURRENT_LABELS = getLabels(KW_DATA);
+
+    buildUI(KW_DATA, CURRENT_LABELS);
+
+    const now = new Date();
+    document.getElementById('updatedAt').textContent =
+      'آخر تحديث: ' + now.toLocaleString('ar-SA', {timeZone:'Asia/Riyadh'});
+
+    renderKwTags();
+    renderMainChart(CURRENT_LABELS);
+    updateCompare(CURRENT_LABELS);
+    renderTrending();
+    renderHeatmap(CURRENT_LABELS);
+    renderRising();
+    renderSpikes();
+
+    // تحديث تلقائي كل 5 دفائق
+    setInterval(async () => {
+      const { interest: ni, trending: nt, related: nr } = await loadData();
+      KW_DATA = buildKwMap(ni);
+      TRENDING = nt;
+      RELATED = nr;
+      CURRENT_LABELS = getLabels(KW_DATA);
+      renderMainChart(CURRENT_LABELS);
+      updateCompare(CURRENT_LABELS);
+      renderTrending();
+      renderHeatmap(CURRENT_LABELS);
+      renderRising();
+      renderSpikes();
+      document.getElementById('updatedAt').textContent =
+        'آخر تحديث: ' + new Date().toLocaleString('ar-SA', {timeZone:'Asia/Riyadh'});
+    }, 5 * 60 * 1000);
+
+  } catch(e) {
+    document.getElementById('mainContent').innerHTML =
+      `<div class="loading" style="color:var(--red)">❌ خطأ في تحميل البيانات: ${e.message}</div>`;
+  }
 }
-let cmpChart=null;
-function updateCompare(){
-  const k1=document.getElementById('cmp1')?.value||activeKws[0];
-  const k2=document.getElementById('cmp2')?.value||activeKws[1]||activeKws[0];
-  const d1=KW_DATA[k1]?.values||Array(90).fill(0);
-  const d2=KW_DATA[k2]?.values||Array(90).fill(0);
-  document.getElementById('cmpLegend').innerHTML=`<span><span class="leg-dot" style="background:#286140"></span>${k1}</span><span><span class="leg-dot" style="background:#B58500"></span>${k2}</span>`;
-  if(cmpChart)cmpChart.destroy();
-  cmpChart=new Chart(document.getElementById('cmpChart'),{type:'line',data:{labels:LABELS,datasets:[{label:k1,data:d1,borderColor:'#286140',backgroundColor:'#28614015',borderWidth:2,pointRadius:0,tension:0.4},{label:k2,data:d2,borderColor:'#B58500',backgroundColor:'#B5850015',borderWidth:2,pointRadius:0,tension:0.4,borderDash:[5,3]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{maxTicksLimit:5,color:'#6B6860',font:{size:10}},grid:{color:'rgba(0,0,0,.06)'}},y:{min:0,max:100,ticks:{color:'#6B6860',font:{size:10}},grid:{color:'rgba(0,0,0,.06)'}}}}});
-}
-function renderTrending(){
-  if(!TRENDING.length){document.getElementById('trendingList').innerHTML='<p style="font-size:13px;color:#6B6860;padding:8px 0">لا بيانات متاحة — No data yet</p>';return;}
-  document.getElementById('trendingList').innerHTML=TRENDING.map((t,i)=>`<div class="kw-row"><span class="kw-rank">#${t.rank||i+1}</span><span class="kw-name">${t.keyword}</span><span style="font-size:11px;color:${i<3?'#A32D2D':'#6B6860'}">${i<3?'🔴':''}</span></div>`).join('');
-}
-function renderHeatmap(){
-  const grid=document.getElementById('heatmapGrid');
-  const vals=Array.from({length:28},()=>Math.floor(Math.random()*90)+10);
-  const mx=Math.max(...vals);
-  grid.innerHTML=vals.map(v=>{const pct=v/mx;const alpha=(0.15+pct*0.85).toFixed(2);return `<div class="hm-cell" style="background:rgba(40,97,64,${alpha})" title="${v}"></div>`;}).join('');
-}
-function renderRegions(){
-  const regions=[{name:'الرياض / Riyadh',val:92},{name:'جدة / Jeddah',val:78},{name:'الدمام / Dammam',val:61},{name:'مكة / Makkah',val:55},{name:'المدينة / Madinah',val:48},{name:'أبها / Abha',val:32}];
-  document.getElementById('regionList').innerHTML=regions.map(r=>`<div class="kw-row"><span class="kw-name">${r.name}</span><div class="kw-bar-bg"><div class="kw-bar" style="width:${r.val}%"></div></div><span class="kw-val">${r.val}</span></div>`).join('');
-}
-function renderRising(){
-  if(!RELATED.length){document.getElementById('risingList').innerHTML='<p style="font-size:13px;color:#6B6860;padding:8px 0">لا بيانات متاحة — No data yet</p>';return;}
-  document.getElementById('risingList').innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+RELATED.map(r=>`<div class="rising-row"><span class="${catClass(r.category)}" style="min-width:48px">${CAT_AR[r.category]||''}</span><span style="flex:1;font-size:12px">${r.related_query}</span><span class="rising-pct">↑${r.value}%</span></div>`).join('')+'</div>';
-}
-renderKwTags();renderMainChart();updateCompare();renderTrending();renderHeatmap();renderRegions();renderRising();
+
+init();
 </script>
 </body>
 </html>
