@@ -68,7 +68,7 @@ def save(table, records):
         log.info(f'No records for {table}')
         return
     for i in range(0, len(records), 50):
-        supabase.table(table).upsert(records[i:i+50], on_conflict='keyword,date,geo' if table=='trends_interest' else 'keyword,geo' if table=='trends_trending' else 'main_keyword,related_query,query_type').execute()
+        supabase.table(table).insert(records[i:i+50]).execute()
     log.info(f'Saved {len(records)} to {table}')
 
 def main():
