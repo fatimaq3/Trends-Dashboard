@@ -1,51 +1,14 @@
 """
-build_dashboard.py
+build_dashboard.py — v4 (Clean & Real Data Only)
 """
 
 import os
-import json
 from datetime import datetime, timezone
-from supabase import create_client, Client
 
-SUPABASE_URL = os.environ["SUPABASE_URL"]
-SUPABASE_KEY = os.environ["SUPABASE_KEY"]
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+SUPABASE_URL = "https://tkmatxmnmphmuykhywtv.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrbWF0eG1ubXBobXV5a2h5d3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MDM1NDgsImV4cCI6MjA5NTk3OTU0OH0.NUwIIhKfqILel1a12HL2NYS-R-iky0E2U7o9tlgtKac"
 
-COLORS = ["#3B82F6","#10B981","#F59E0B","#EF4444","#8B5CF6","#06B6D4"]
-CAT_LABELS = {"geopolitical":"جيوسياسي 🌍","economic":"اقتصادي 📈","saudi_local":"سعودي محلي 🇸🇦"}
-
-def fetch_data():
-    interest = supabase.table("trends_interest").select("keyword,category,date,interest").order("date").execute().data or []
-    trending = supabase.table("trends_trending").select("keyword,rank").order("rank").limit(20).execute().data or []
-    related  = supabase.table("trends_related").select("main_keyword,related_query,value,query_type,category").eq("query_type","rising").order("value",desc=True).limit(50).execute().data or []
-    return interest, trending, related
-
-def build_dashboard(interest_data, trending_data, related_data):
-    updated_at = datetime.now(timezone.utc).strftime("%d %b %Y — %H:%M UTC")
-    categories = {}
-    for row in interest_data:
-        cat, kw = row["category"], row["keyword"]
-        if cat not in categories: categories[cat] = {}
-        if kw not in categories[cat]: categories[cat][kw] = {"dates":[],"values":[]}
-        categories[cat][kw]["dates"].append(row["date"])
-        categories[cat][kw]["values"].append(row["interest"])
-
-    charts_json   = json.dumps(categories, ensure_ascii=False)
-    trending_json = json.dumps(trending_data, ensure_ascii=False)
-    related_json  = json.dumps(related_data, ensure_ascii=False)
-
-    tabs_html = "".join(
-        f'<button class="tab {"active" if i==0 else ""}" data-cat="{cat}" onclick="switchCat(this)">{CAT_LABELS.get(cat,cat)}</button>'
-        for i,cat in enumerate(categories.keys())
-    )
-    panels_html = "".join(
-        f'''<div class="chart-panel {"active" if i==0 else ""}" id="panel-{cat}">
-          <div class="chart-grid">
-            {"".join(f'<div class="chart-card"><h3>{kw}</h3><canvas id="chart-{cat}-{j}"></canvas></div>' for j,kw in enumerate(kws.keys()))}
-          </div></div>'''
-        for i,(cat,kws) in enumerate(categories.items())
-    )
-
+def build_dashboard():
     html = f"""<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -54,123 +17,428 @@ def build_dashboard(interest_data, trending_data, related_data):
 <title>TrendsWatch 🇸🇦</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-:root{{--bg:#0F1117;--surface:#1A1D27;--border:#2A2D3A;--accent:#3B82F6;--accent2:#10B981;--text:#E2E8F0;--muted:#64748B;--hot:#EF4444;}}
-*{{box-sizing:border-box;margin:0;padding:0;}}
-body{{background:var(--bg);color:var(--text);font-family:'Segoe UI',Tahoma,Arial,sans-serif;}}
-header{{padding:24px 32px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}}
-.logo{{font-size:1.4rem;font-weight:700;}}.logo span{{color:var(--accent);}}
-.updated{{font-size:0.8rem;color:var(--muted);}}
-main{{max-width:1400px;margin:0 auto;padding:32px 24px;display:grid;gap:32px;}}
-.section-title{{font-size:1rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;display:flex;align-items:center;gap:8px;}}
-.section-title::after{{content:'';flex:1;height:1px;background:var(--border);}}
-.tabs{{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}}
-.tab{{padding:8px 18px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:0.9rem;transition:all 0.2s;}}
-.tab.active{{background:var(--accent);border-color:var(--accent);color:#fff;}}
-.tab:hover:not(.active){{border-color:var(--accent);color:var(--text);}}
-.chart-panel{{display:none;}}.chart-panel.active{{display:block;}}
-.chart-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:20px;}}
-.chart-card{{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;}}
-.chart-card h3{{font-size:0.9rem;color:var(--muted);margin-bottom:14px;}}
-.chart-card canvas{{max-height:200px;}}
-.trending-grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;}}
-.trend-item{{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:12px;transition:border-color 0.2s;}}
-.trend-item:hover{{border-color:var(--accent);}}
-.trend-rank{{font-size:1.1rem;font-weight:700;color:var(--accent);min-width:28px;}}
-.trend-rank.hot{{color:var(--hot);}}
-.trend-kw{{font-size:0.9rem;}}
-.related-table{{width:100%;border-collapse:collapse;}}
-.related-table th{{text-align:right;padding:10px 14px;font-size:0.8rem;color:var(--muted);border-bottom:1px solid var(--border);}}
-.related-table td{{padding:10px 14px;font-size:0.9rem;border-bottom:1px solid var(--border);}}
-.related-table tr:last-child td{{border-bottom:none;}}
-.badge{{display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.75rem;background:rgba(16,185,129,0.15);color:var(--accent2);}}
-.bar-bg{{background:var(--border);border-radius:4px;height:6px;width:120px;}}
-.bar-fill{{background:var(--accent2);border-radius:4px;height:6px;}}
+:root{{
+  --bg:#F8F7F2;--surface:#FFFFFF;--border:#E2DDD0;--text:#1A1A14;--muted:#6B6860;
+  --green:#286140;--green-light:#EBF3ED;
+  --gold:#B58500;--gold-light:#FBF3D5;--gold-dark:#7A4700;
+  --red:#A32D2D;--red-light:#FCEBEB;--red-border:#F09595;
+}}
+*{{box-sizing:border-box;margin:0;padding:0}}
+body{{background:var(--bg);color:var(--text);font-family:'Segoe UI',Tahoma,Arial,sans-serif;min-height:100vh}}
+header{{background:var(--green);color:#fff;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}}
+.logo{{font-size:1.3rem;font-weight:700}}
+.logo span{{color:#B58500}}
+.updated{{font-size:11px;opacity:.8}}
+main{{max-width:1300px;margin:0 auto;padding:20px;display:grid;gap:20px}}
+.sec-label{{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;display:flex;align-items:center;gap:8px}}
+.sec-label::after{{content:'';flex:1;height:1px;background:var(--border)}}
+.card{{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px}}
+.kpi-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}}
+.kpi{{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;border-top:3px solid var(--green)}}
+.kpi-label{{font-size:11px;color:var(--muted);margin-bottom:4px}}
+.kpi-val{{font-size:22px;font-weight:700;color:var(--green)}}
+.kpi-sub{{font-size:11px;color:var(--muted);margin-top:2px}}
+.chips{{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}}
+.chip{{padding:5px 12px;border-radius:20px;font-size:12px;border:1px solid var(--border);background:var(--bg);cursor:pointer;color:var(--muted);transition:all .15s}}
+.chip.active{{background:var(--green);border-color:var(--green);color:#fff}}
+.kw-tags{{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;min-height:28px}}
+.tag{{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:12px;background:var(--green-light);border:1px solid #9FE1CB;color:var(--green)}}
+.tag-x{{cursor:pointer;font-size:14px;line-height:1;margin-right:2px}}
+.add-kw{{display:flex;gap:8px;margin-top:10px}}
+.add-kw input{{flex:1;padding:7px 10px;font-size:13px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);outline:none}}
+.add-kw input:focus{{border-color:var(--green)}}
+.add-kw button{{padding:7px 14px;font-size:13px;border:none;border-radius:8px;background:var(--green);color:#fff;cursor:pointer;white-space:nowrap}}
+.badge-geo{{background:#E6F1FB;color:#0C447C;font-size:11px;padding:2px 7px;border-radius:4px}}
+.badge-eco{{background:var(--gold-light);color:var(--gold-dark);font-size:11px;padding:2px 7px;border-radius:4px}}
+.badge-sa{{background:var(--green-light);color:var(--green);font-size:11px;padding:2px 7px;border-radius:4px}}
+.leg-dot{{width:10px;height:10px;border-radius:2px;display:inline-block}}
+.grid2{{display:grid;grid-template-columns:1fr 1fr;gap:16px}}
+.kw-row{{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}}
+.kw-row:last-child{{border-bottom:none}}
+.kw-rank{{font-size:12px;font-weight:700;color:var(--gold);min-width:24px}}
+.kw-name{{font-size:13px;flex:1}}
+.rising-row{{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}}
+.rising-row:last-child{{border-bottom:none}}
+.rising-pct{{color:var(--green);font-size:11px;font-weight:700;min-width:45px;text-align:left}}
+.alert{{background:var(--red-light);border:1px solid var(--red-border);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--red);display:flex;align-items:center;gap:8px;margin-bottom:8px;font-weight:500}}
+.spinner{{display:inline-block;width:20px;height:20px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite}}
+@keyframes spin{{to{{transform:rotate(360deg)}}}}
+.loading-msg{{text-align:center;padding:40px;color:var(--muted)}}
+.search-result-card{{background:var(--surface);border:2px solid var(--green);border-radius:10px;padding:16px;margin-top:10px}}
+.cmp-legend{{display:flex;gap:12px;font-size:12px;color:var(--muted);margin-bottom:8px;flex-wrap:wrap;align-items:center}}
+@media(max-width:700px){{.grid2{{grid-template-columns:1fr}}}}
 </style>
 </head>
 <body>
 <header>
-  <div class="logo">Trends<span>Watch</span> 🇸🇦</div>
-  <div class="updated">آخر تحديث: {updated_at}</div>
+  <div class="logo">📈 Trends<span>Watch</span> 🇸🇦</div>
+  <div class="updated" id="updatedAt">جاري التحميل...</div>
 </header>
-<main>
-  <section>
-    <div class="section-title">الاهتمام عبر الزمن — آخر 90 يوم</div>
-    <div class="search-box" style="display:flex;gap:8px;margin-bottom:16px">
-      <input id="kwSearchInput" type="text" placeholder="ابحث عن كلمة... / Search keyword..." style="flex:1;padding:8px 12px;font-size:13px;border:1px solid #E2DDD0;border-radius:8px;background:#F8F7F2;color:#1A1A14;outline:none" onkeydown="if(event.key==='Enter')searchKw()">
-      <button onclick="searchKw()" style="padding:8px 16px;font-size:13px;border:none;border-radius:8px;background:#286140;color:#fff;cursor:pointer">بحث</button>
-    </div>
-    <div id="searchResult" style="display:none;margin-bottom:16px;background:#fff;border:1px solid #E2DDD0;border-radius:10px;padding:16px"></div>
-    <div class="tabs">{tabs_html}</div>
-    {panels_html}
-  </section>
-  <section>
-    <div class="section-title">🔥 الأكثر بحثاً الآن في السعودية</div>
-    <div class="trending-grid" id="trendingGrid"></div>
-  </section>
-  <section>
-    <div class="section-title">📡 استفسارات صاعدة مرتبطة</div>
-    <div class="chart-card" style="overflow-x:auto">
-      <table class="related-table">
-        <thead><tr><th>الكلمة الرئيسية</th><th>الاستفسار</th><th>الفئة</th><th>الارتفاع</th></tr></thead>
-        <tbody id="relatedBody"></tbody>
-      </table>
-    </div>
-  </section>
+<main id="mainContent">
+  <div class="loading-msg"><div class="spinner"></div><br><br>جاري تحميل البيانات...</div>
 </main>
+
 <script>
-const CHARTS_DATA={charts_json};
-const TRENDING={trending_json};
-const RELATED={related_json};
-const COLORS={json.dumps(COLORS)};
-const CI={{}};
-function drawChartsForCat(cat){{
-  const kws=CHARTS_DATA[cat];if(!kws)return;
-  Object.entries(kws).forEach(([kw,data],j)=>{{
-    const id=`chart-${{cat}}-${{j}}`,canvas=document.getElementById(id);
-    if(!canvas)return;if(CI[id])CI[id].destroy();
-    CI[id]=new Chart(canvas,{{type:'line',data:{{labels:data.dates,datasets:[{{label:kw,data:data.values,borderColor:COLORS[j%COLORS.length],backgroundColor:COLORS[j%COLORS.length]+'22',borderWidth:2,pointRadius:0,fill:true,tension:0.4}}]}},options:{{responsive:true,plugins:{{legend:{{display:false}}}},scales:{{x:{{ticks:{{maxTicksLimit:6,color:'#64748B',font:{{size:10}}}},grid:{{color:'#2A2D3A'}}}},y:{{min:0,max:100,ticks:{{color:'#64748B',font:{{size:10}}}},grid:{{color:'#2A2D3A'}}}}}}}}}});
+const SB_URL = '{SUPABASE_URL}';
+const SB_KEY = '{SUPABASE_ANON_KEY}';
+const COLORS = ['#286140','#B58500','#A32D2D','#185FA5','#534AB7','#0F6E56','#993556','#7A4700'];
+const CAT_AR = {{'geopolitical':'جيوسياسي','economic':'اقتصادي','saudi_local':'محلي'}};
+
+async function sbFetch(table, params) {{
+  const r = await fetch(`${{SB_URL}}/rest/v1/${{table}}?${{params}}`, {{
+    headers: {{'apikey': SB_KEY, 'Authorization': `Bearer ${{SB_KEY}}`}}
+  }});
+  return r.json();
+}}
+
+function catClass(c) {{
+  return c==='geopolitical'?'badge-geo':c==='economic'?'badge-eco':'badge-sa';
+}}
+
+let KW_DATA = {{}}, TRENDING = [], RELATED = [];
+let activeKws = [], activeCat = 'all';
+let LABELS = [];
+let mainChart = null, cmpChart = null, searchChart = null;
+
+async function loadAll() {{
+  const today = new Date();
+  const twoMonthsAgo = new Date(today);
+  twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+  const fromDate = twoMonthsAgo.toISOString().split('T')[0];
+
+  const [interest, trending, related] = await Promise.all([
+    sbFetch('trends_interest', `select=keyword,category,date,interest&date=gte.${{fromDate}}&order=date.asc&limit=5000`),
+    sbFetch('trends_trending', 'select=keyword,rank&order=rank.asc&limit=20'),
+    sbFetch('trends_related', 'select=main_keyword,related_query,value,query_type,category&query_type=eq.rising&order=value.desc&limit=30')
+  ]);
+
+  // بناء KW_DATA — آخر قيمة لكل تاريخ لكل keyword
+  const map = {{}};
+  for (const row of (interest || [])) {{
+    const k = row.keyword;
+    if (!map[k]) map[k] = {{cat: row.category, byDate: {{}}}};
+    map[k].byDate[row.date] = row.interest;
+  }}
+
+  // استخراج كل التواريخ الفريدة ومرتبة
+  const allDates = new Set();
+  for (const d of Object.values(map)) Object.keys(d.byDate).forEach(dt => allDates.add(dt));
+  LABELS = Array.from(allDates).sort();
+
+  // بناء arrays
+  for (const [k, d] of Object.entries(map)) {{
+    KW_DATA[k] = {{
+      cat: d.cat,
+      values: LABELS.map(l => d.byDate[l] ?? null)
+    }};
+  }}
+
+  TRENDING = trending || [];
+  RELATED = related || [];
+  activeKws = Object.keys(KW_DATA);
+}}
+
+function filteredKws() {{
+  return activeKws.filter(k => activeCat === 'all' || (KW_DATA[k] && KW_DATA[k].cat === activeCat));
+}}
+
+function renderKwTags() {{
+  document.getElementById('kwTags').innerHTML = filteredKws().map(k =>
+    `<span class="tag"><span class="${{catClass(KW_DATA[k]?.cat||'saudi_local')}}">${{CAT_AR[KW_DATA[k]?.cat]||''}}</span> ${{k}} <span class="tag-x" onclick="removeKw('${{k}}')">×</span></span>`
+  ).join('');
+}}
+
+function removeKw(k) {{
+  activeKws = activeKws.filter(x => x !== k);
+  renderKwTags();
+  renderMainChart();
+}}
+
+function renderMainChart() {{
+  const kws = filteredKws().slice(0, 8);
+  const datasets = kws.map((k, i) => ({{
+    label: k,
+    data: KW_DATA[k]?.values || [],
+    borderColor: COLORS[i % COLORS.length],
+    backgroundColor: COLORS[i % COLORS.length] + '15',
+    borderWidth: 2, pointRadius: 0, fill: false, tension: 0.4,
+    spanGaps: true
+  }}));
+  document.getElementById('mainLegend').innerHTML = kws.map((k, i) =>
+    `<span style="display:flex;align-items:center;gap:4px"><span class="leg-dot" style="background:${{COLORS[i%COLORS.length]}}"></span>${{k}}</span>`
+  ).join('');
+  if (mainChart) mainChart.destroy();
+  mainChart = new Chart(document.getElementById('mainChart'), {{
+    type: 'line',
+    data: {{labels: LABELS, datasets}},
+    options: {{
+      responsive: true, maintainAspectRatio: false,
+      plugins: {{legend: {{display: false}}, tooltip: {{mode: 'index', intersect: false}}}},
+      scales: {{
+        x: {{ticks: {{maxTicksLimit: 8, color: '#6B6860', font: {{size: 10}}}}, grid: {{color: 'rgba(0,0,0,.05)'}}}},
+        y: {{min: 0, max: 100, ticks: {{color: '#6B6860', font: {{size: 10}}}}, grid: {{color: 'rgba(0,0,0,.05)'}}}}
+      }}
+    }}
   }});
 }}
-function switchCat(btn){{
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.chart-panel').forEach(p=>p.classList.remove('active'));
-  btn.classList.add('active');
-  const cat=btn.dataset.cat;
-  document.getElementById(`panel-${{cat}}`).classList.add('active');
-  drawChartsForCat(cat);
+
+function updateCompare() {{
+  const k1 = document.getElementById('cmp1')?.value || activeKws[0];
+  const k2 = document.getElementById('cmp2')?.value || activeKws[1] || activeKws[0];
+  const d1 = KW_DATA[k1]?.values || [];
+  const d2 = KW_DATA[k2]?.values || [];
+  document.getElementById('cmpLegend').innerHTML =
+    `<span style="display:flex;align-items:center;gap:4px"><span class="leg-dot" style="background:#286140"></span>${{k1}}</span>` +
+    `<span style="display:flex;align-items:center;gap:4px"><span class="leg-dot" style="background:#B58500"></span>${{k2}}</span>`;
+  if (cmpChart) cmpChart.destroy();
+  cmpChart = new Chart(document.getElementById('cmpChart'), {{
+    type: 'line',
+    data: {{labels: LABELS, datasets: [
+      {{label: k1, data: d1, borderColor: '#286140', backgroundColor: '#28614015', borderWidth: 2, pointRadius: 0, tension: 0.4, spanGaps: true}},
+      {{label: k2, data: d2, borderColor: '#B58500', backgroundColor: '#B5850015', borderWidth: 2, pointRadius: 0, tension: 0.4, borderDash: [5,3], spanGaps: true}}
+    ]}},
+    options: {{
+      responsive: true, maintainAspectRatio: false,
+      plugins: {{legend: {{display: false}}}},
+      scales: {{
+        x: {{ticks: {{maxTicksLimit: 6, color: '#6B6860', font: {{size: 10}}}}, grid: {{color: 'rgba(0,0,0,.05)'}}}},
+        y: {{min: 0, max: 100, ticks: {{color: '#6B6860', font: {{size: 10}}}}, grid: {{color: 'rgba(0,0,0,.05)'}}}}
+      }}
+    }}
+  }});
 }}
-const CAT_AR={{geopolitical:'جيوسياسي',economic:'اقتصادي',saudi_local:'محلي'}};
-function renderTrending(){{
-  document.getElementById('trendingGrid').innerHTML=TRENDING.map(t=>`<div class="trend-item"><span class="trend-rank ${{t.rank<=3?'hot':''}}">#${{t.rank}}</span><span class="trend-kw">${{t.keyword}}</span></div>`).join('');
+
+function renderTrending() {{
+  const el = document.getElementById('trendingList');
+  if (!TRENDING.length) {{ el.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:8px 0">لا بيانات متاحة</p>'; return; }}
+  el.innerHTML = TRENDING.map((t, i) =>
+    `<div class="kw-row"><span class="kw-rank">#${{t.rank||i+1}}</span><span class="kw-name">${{t.keyword}}</span>${{i<3?'<span style="color:#A32D2D">🔴</span>':''}}</div>`
+  ).join('');
 }}
-function renderRelated(){{
-  const maxVal=Math.max(...RELATED.map(r=>r.value),1);
-  document.getElementById('relatedBody').innerHTML=RELATED.slice(0,30).map(r=>`<tr><td>${{r.main_keyword}}</td><td>${{r.related_query}}</td><td><span class="badge">${{CAT_AR[r.category]||r.category}}</span></td><td><div class="bar-bg"><div class="bar-fill" style="width:${{Math.round(r.value/maxVal*100)}}%"></div></div></td></tr>`).join('');
+
+function renderRising() {{
+  const el = document.getElementById('risingList');
+  if (!RELATED.length) {{ el.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:8px 0">لا بيانات متاحة</p>'; return; }}
+  el.innerHTML = RELATED.map(r =>
+    `<div class="rising-row"><span class="${{catClass(r.category)}}" style="min-width:52px">${{CAT_AR[r.category]||''}}</span><span style="flex:1">${{r.related_query}}</span><span class="rising-pct">↑${{r.value}}%</span></div>`
+  ).join('');
 }}
-async function searchKw(){{
-  const inp=document.getElementById('kwSearchInput'),v=inp.value.trim();
-  const res=await fetch('https://tkmatxmnmphmuykhywtv.supabase.co/rest/v1/trends_interest?select=keyword,category,date,interest&keyword=eq.'+encodeURIComponent(v)+'&order=date.asc&limit=200',{{headers:{{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrbWF0eG1ubXBobXV5a2h5d3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MDM1NDgsImV4cCI6MjA5NTk3OTU0OH0.NUwIIhKfqILel1a12HL2NYS-R-iky0E2U7o9tlgtKac','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrbWF0eG1ubXBobXV5a2h5d3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MDM1NDgsImV4cCI6MjA5NTk3OTU0OH0.NUwIIhKfqILel1a12HL2NYS-R-iky0E2U7o9tlgtKac'}}}});
-  const rows=await res.json();
-  const dates=rows.map(r=>r.date),values=rows.map(r=>r.interest),cat=rows[0].category;
-  const panel=document.getElementById('searchResult');
-  panel.style.display='block';
-  panel.innerHTML='<canvas id='searchChart'></canvas>';
-  new Chart(document.getElementById('searchChart'),{{type:'line',data:{{labels:dates,datasets:[{{label:v,data:values,borderColor:'#286140',backgroundColor:'#28614022',borderWidth:2,pointRadius:0,fill:true,tension:0.4}}]}},options:{{responsive:true,plugins:{{legend:{{display:true}}}},scales:{{x:{{ticks:{{maxTicksLimit:6,color:'#64748B',font:{{size:10}}}},grid:{{color:'#2A2D3A'}}}},y:{{min:0,max:100,ticks:{{color:'#64748B',font:{{size:10}}}},grid:{{color:'#2A2D3A'}}}}}}}}}});
+
+function renderSpikes() {{
+  const spikes = [];
+  for (const [kw, d] of Object.entries(KW_DATA)) {{
+    const vals = d.values.filter(v => v !== null);
+    if (vals.length >= 14) {{
+      const recent = vals.slice(-7), prev = vals.slice(-14, -7);
+      const diff = Math.round(recent.reduce((a,b)=>a+b,0)/recent.length - prev.reduce((a,b)=>a+b,0)/prev.length);
+      if (diff > 20) spikes.push([kw, diff]);
+    }}
+  }}
+  const sec = document.getElementById('alertsSec');
+  if (!spikes.length) {{ sec.style.display='none'; return; }}
+  sec.style.display='';
+  document.getElementById('alertsList').innerHTML = spikes.map(([kw,diff]) =>
+    `<div class="alert">🔴 <strong>${{kw}}</strong> — ارتفع ${{diff}}+ نقطة في آخر 7 أيام</div>`
+  ).join('');
+  document.getElementById('spikeCount').textContent = spikes.length;
 }}
-(function init(){{
-  const first=Object.keys(CHARTS_DATA)[0];
-  if(first)drawChartsForCat(first);
-  renderTrending();renderRelated();
-}})();
+
+async function searchKw() {{
+  const inp = document.getElementById('kwSearchInput');
+  const v = inp.value.trim();
+  if (!v) return;
+
+  const resEl = document.getElementById('searchResultArea');
+  resEl.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner"></div></div>';
+  resEl.style.display = 'block';
+
+  const fromDate = (() => {{
+    const d = new Date(); d.setMonth(d.getMonth()-2);
+    return d.toISOString().split('T')[0];
+  }})();
+
+  const rows = await sbFetch('trends_interest',
+    `select=keyword,category,date,interest&keyword=eq.${{encodeURIComponent(v)}}&date=gte.${{fromDate}}&order=date.asc&limit=500`
+  );
+
+  if (!rows || !rows.length) {{
+    resEl.innerHTML = `<div class="search-result-card" style="color:var(--muted)">لا توجد بيانات لـ "<strong>${{v}}</strong>" في آخر شهرين.</div>`;
+    return;
+  }}
+
+  // نضيف للـ KW_DATA
+  const byDate = {{}};
+  rows.forEach(r => {{ byDate[r.date] = r.interest; }});
+  KW_DATA[v] = {{cat: rows[0].category, values: LABELS.map(l => byDate[l] ?? null)}};
+  if (!activeKws.includes(v)) activeKws.push(v);
+
+  const dates = rows.map(r => r.date);
+  const vals = rows.map(r => r.interest);
+
+  resEl.innerHTML = `<div class="search-result-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <strong style="color:var(--green)">${{v}}</strong>
+      <button onclick="document.getElementById('searchResultArea').style.display='none'" style="border:none;background:none;cursor:pointer;color:var(--muted);font-size:16px">✕</button>
+    </div>
+    <div style="position:relative;height:180px"><canvas id="searchChart"></canvas></div>
+  </div>`;
+
+  if (searchChart) searchChart.destroy();
+  searchChart = new Chart(document.getElementById('searchChart'), {{
+    type: 'line',
+    data: {{labels: dates, datasets: [{{
+      label: v, data: vals,
+      borderColor: '#286140', backgroundColor: '#28614022',
+      borderWidth: 2, pointRadius: 0, fill: true, tension: 0.4, spanGaps: true
+    }}]}},
+    options: {{
+      responsive: true, maintainAspectRatio: false,
+      plugins: {{legend: {{display: false}}, tooltip: {{mode: 'index', intersect: false}}}},
+      scales: {{
+        x: {{ticks: {{maxTicksLimit: 6, color: '#6B6860', font: {{size: 10}}}}, grid: {{color: 'rgba(0,0,0,.05)'}}}},
+        y: {{min: 0, max: 100, ticks: {{color: '#6B6860', font: {{size: 10}}}}, grid: {{color: 'rgba(0,0,0,.05)'}}}}
+      }}
+    }}
+  }});
+
+  renderKwTags();
+  renderMainChart();
+  inp.value = '';
+}}
+
+function buildUI() {{
+  const kwKeys = Object.keys(KW_DATA);
+  const allVals = Object.values(KW_DATA).flatMap(d => d.values.filter(v => v !== null));
+  const avgInt = allVals.length ? Math.round(allVals.reduce((a,b)=>a+b,0)/allVals.length) : 0;
+  const topTerm = kwKeys.reduce((a,b) => {{
+    const ma = Math.max(...(KW_DATA[a]?.values.filter(v=>v!==null)||[0]));
+    const mb = Math.max(...(KW_DATA[b]?.values.filter(v=>v!==null)||[0]));
+    return mb > ma ? b : a;
+  }}, kwKeys[0] || '—');
+
+  document.getElementById('mainContent').innerHTML = `
+  <section>
+    <div class="sec-label">📊 ملخص / Summary</div>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-label">أعلى مصطلح / Top term</div><div class="kpi-val" style="font-size:15px;margin-top:4px">${{topTerm}}</div></div>
+      <div class="kpi"><div class="kpi-label">مصطلحات / Tracked</div><div class="kpi-val">${{kwKeys.length}}</div><div class="kpi-sub">عبر 3 فئات</div></div>
+      <div class="kpi" style="border-top-color:var(--red)"><div class="kpi-label">ارتفاع مفاجئ / Spikes</div><div class="kpi-val" style="color:var(--red)" id="spikeCount">0</div><div class="kpi-sub">آخر 7 أيام</div></div>
+      <div class="kpi" style="border-top-color:var(--gold)"><div class="kpi-label">متوسط / Avg interest</div><div class="kpi-val" style="color:var(--gold-dark)">${{avgInt}}</div><div class="kpi-sub">من 100</div></div>
+    </div>
+  </section>
+
+  <section id="alertsSec" style="display:none">
+    <div class="sec-label">🚨 تنبيهات / Alerts</div>
+    <div id="alertsList"></div>
+  </section>
+
+  <section>
+    <div class="sec-label">🔍 بحث / Search</div>
+    <div class="card">
+      <div class="add-kw">
+        <input id="kwSearchInput" type="text" placeholder="ابحث عن كلمة بالعربي أو الانجليزي..." onkeydown="if(event.key==='Enter')searchKw()">
+        <button onclick="searchKw()">بحث + إضافة</button>
+      </div>
+      <div id="searchResultArea" style="display:none;margin-top:10px"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-label">🏷️ الكلمات المفتاحية / Keywords</div>
+    <div class="card">
+      <div class="chips" id="catChips">
+        <span class="chip active" onclick="filterCat('all',this)">الكل / All</span>
+        <span class="chip" onclick="filterCat('geopolitical',this)">جيوسياسي</span>
+        <span class="chip" onclick="filterCat('economic',this)">اقتصادي</span>
+        <span class="chip" onclick="filterCat('saudi_local',this)">محلي</span>
+      </div>
+      <div class="kw-tags" id="kwTags"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-label">📈 الاهتمام عبر الزمن / Interest over time</div>
+    <div class="card">
+      <div class="cmp-legend" id="mainLegend"></div>
+      <div style="position:relative;width:100%;height:260px">
+        <canvas id="mainChart"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <div class="grid2">
+    <section>
+      <div class="sec-label">⚖️ مقارنة / Compare</div>
+      <div class="card">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+          <select id="cmp1" onchange="updateCompare()" style="padding:5px 8px;font-size:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg)">${{kwKeys.map(k=>`<option>${{k}}</option>`).join('')}}</select>
+          <span style="color:var(--muted);font-size:13px">vs</span>
+          <select id="cmp2" onchange="updateCompare()" style="padding:5px 8px;font-size:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg)">${{kwKeys.slice(1).map(k=>`<option>${{k}}</option>`).join('')}}</select>
+        </div>
+        <div class="cmp-legend" id="cmpLegend"></div>
+        <div style="position:relative;width:100%;height:180px"><canvas id="cmpChart"></canvas></div>
+      </div>
+    </section>
+    <section>
+      <div class="sec-label">🔥 الأكثر بحثاً الآن / Trending now</div>
+      <div class="card" style="max-height:300px;overflow-y:auto"><div id="trendingList"></div></div>
+    </section>
+  </div>
+
+  <section>
+    <div class="sec-label">🚀 استفسارات صاعدة / Rising queries</div>
+    <div class="card"><div id="risingList"></div></div>
+  </section>`;
+
+  window.filterCat = function(cat, el) {{
+    activeCat = cat;
+    document.querySelectorAll('#catChips .chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    renderKwTags();
+    renderMainChart();
+  }};
+}}
+
+async function init() {{
+  try {{
+    await loadAll();
+    buildUI();
+    renderKwTags();
+    renderMainChart();
+    updateCompare();
+    renderTrending();
+    renderRising();
+    renderSpikes();
+    document.getElementById('updatedAt').textContent =
+      'آخر تحديث: ' + new Date().toLocaleString('ar-SA', {{timeZone:'Asia/Riyadh'}});
+
+    setInterval(async () => {{
+      await loadAll();
+      renderKwTags();
+      renderMainChart();
+      updateCompare();
+      renderTrending();
+      renderRising();
+      renderSpikes();
+      document.getElementById('updatedAt').textContent =
+        'آخر تحديث: ' + new Date().toLocaleString('ar-SA', {{timeZone:'Asia/Riyadh'}});
+    }}, 5 * 60 * 1000);
+
+  }} catch(e) {{
+    document.getElementById('mainContent').innerHTML =
+      `<div class="loading-msg" style="color:var(--red)">❌ خطأ: ${{e.message}}</div>`;
+  }}
+}}
+
+init();
 </script>
 </body>
 </html>"""
 
-    os.makedirs("docs",exist_ok=True)
-    with open("docs/index.html","w",encoding="utf-8") as f:
+    os.makedirs("docs", exist_ok=True)
+    with open("docs/index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✅ Dashboard → docs/index.html")
+    print("✅ Dashboard v4 → docs/index.html")
 
 if __name__ == "__main__":
-    interest, trending, related = fetch_data()
-    build_dashboard(interest, trending, related)
+    build_dashboard()
