@@ -101,7 +101,7 @@ async function sbFetch(table, params='') {{
 
 async function loadData() {{
   const [interest, trending, related] = await Promise.all([
-    sbFetch('trends_interest', 'select=keyword,category,date,interest&order=date.asc&limit=2000'),
+    sbFetch('trends_interest', 'select=keyword,category,date,interest&order=date.asc&limit=600'),
     sbFetch('trends_trending', 'select=keyword,rank&order=rank.asc&limit=20'),
     sbFetch('trends_related', 'select=main_keyword,related_query,value,query_type,category&query_type=eq.rising&order=value.desc&limit=30')
   ]);
@@ -142,6 +142,7 @@ function filteredKws() {{
   return activeKws.filter(k => activeCat === 'all' || (KW_DATA[k] && KW_DATA[k].cat === activeCat));
 }}
 
+async function addKw(){{const inp=document.getElementById('kwInput'),v=inp.value.trim();if(!v)return;inp.value='';const rows=await sbFetch('trends_interest','select=keyword,category,date,interest&keyword=eq.'+encodeURIComponent(v)+'&order=date.asc&limit=200');if(rows&&rows.length){{if(!KW_DATA[v]){{KW_DATA[v]={{cat:rows[0].category,dates:[],values:[]}};rows.forEach(r=>{{KW_DATA[v].dates.push(r.date);KW_DATA[v].values.push(r.interest);}});}}if(!activeKws.includes(v))activeKws.push(v);}}else{{KW_DATA[v]={{cat:'saudi_local',dates:CURRENT_LABELS,values:Array(CURRENT_LABELS.length).fill(0)}};if(!activeKws.includes(v))activeKws.push(v);}}renderKwTags();renderMainChart(CURRENT_LABELS);}}
 function renderKwTags() {{
   document.getElementById('kwTags').innerHTML = filteredKws().map(k =>
     `<span class="tag"><span class="${{catClass(KW_DATA[k]?.cat||'saudi_local')}}">${{CAT_AR[KW_DATA[k]?.cat]||''}}</span> ${{k}}</span>`
@@ -253,7 +254,7 @@ function buildUI(kwMap, labels) {{
   <section>
     <div class="sec-label">📊 ملخص / Summary</div>
     <div class="kpi-grid">
-      <div class="kpi"><div class="kpi-label">أعمى مصطلح / Top term</div><div class="kpi-val" style="font-size:16px;margin-top:4px">${{topTerm}}</div></div>
+      <div class="kpi"><div class="kpi-label">أعلى مصطلح / Top term</div><div class="kpi-val" style="font-size:16px;margin-top:4px">${{topTerm}}</div></div>
       <div class="kpi"><div class="kpi-label">مصطلحات / Tracked</div><div class="kpi-val">${{kwKeys.length}}</div><div class="kpi-sub">عبر 3 فئات</div></div>
       <div class="kpi" style="border-top-color:var(--red)"><div class="kpi-label">ارتفاع مفاجئ / Spikes</div><div class="kpi-val" style="color:var(--red)" id="spikeCount">0</div><div class="kpi-sub">آخر 7 أيام</div></div>
       <div class="kpi" style="border-top-color:var(--gold)"><div class="kpi-label">متوسط / Avg interest</div><div class="kpi-val" style="color:var(--gold-dark)">${{avgInterest}}</div><div class="kpi-sub">من 100</div></div>
@@ -275,6 +276,10 @@ function buildUI(kwMap, labels) {{
         <span class="chip" onclick="filterCat('saudi_local',this)">محلي</span>
       </div>
       <div id="kwTags"></div>
+      <div class="add-kw">
+        <input type="text" id="kwInput" placeholder="أضف كلمة... / Add keyword..." onkeydown="if(event.key==='Enter')addKw()">
+        <button onclick="addKw()">+ إضافة</button>
+      </div>
     </div>
   </section>
 
