@@ -101,7 +101,7 @@ async function sbFetch(table, params='') {{
 
 async function loadData() {{
   const [interest, trending, related] = await Promise.all([
-    sbFetch('trends_interest', 'select=keyword,category,date,interest&order=date.asc&limit=2000'),
+    sbFetch('trends_interest', 'select=keyword,category,date,interest&order=date.asc&limit=5000'),
     sbFetch('trends_trending', 'select=keyword,rank&order=rank.asc&limit=20'),
     sbFetch('trends_related', 'select=main_keyword,related_query,value,query_type,category&query_type=eq.rising&order=value.desc&limit=30')
   ]);
