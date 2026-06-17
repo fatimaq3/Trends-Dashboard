@@ -21,9 +21,18 @@ pytrends = TrendReq(hl="ar", tz=180, timeout=(10, 25), retries=3, backoff_factor
 TIMEFRAME = "today 3-m"
 
 KEYWORD_GROUPS = {
-    "geopolitical": ["Iran war", "Israel Gaza", "Middle East conflict", "حرب إيران", "غزة"],
-    "economic": ["Saudi Aramco", "oil price", "NEOM", "Vision 2030", "سعر النفط"],
-    "saudi_local": ["رؤية 2030", "نيوم", "الرياض", "السعودية", "وزارة المالية"]
+    "economic": [
+        "Saudi Aramco", "oil price", "Vision 2030", "Saudi stock market", "Tadawul",
+        "Saudi real estate", "Saudi inflation", "Saudi GDP", "PIF Saudi", "Saudi IPO",
+        "Saudi tourism", "Saudi fintech", "NEOM", "Saudi privatization", "Saudi budget"
+    ],
+    "saudi_local": [
+        "البطالة السعودية", "أسعار الإيجار", "غلاء المعيشة", "أسعار البنزين",
+        "الرعاية الصحية السعودية", "التعليم السعودية", "تكاليف الزواج", "أسعار العقار",
+        "الراتب السعودية", "حافز", "سكني", "نطاقات", "التأمين الصحي",
+        "ضريبة القيمة المضافة", "أسعار المواد الغذائية", "حساب المواطن",
+        "أسعار الكهرباء", "ساند", "هدف", "التوطين"
+    ]
 }
 
 def fetch_interest_over_time(keywords, category):
