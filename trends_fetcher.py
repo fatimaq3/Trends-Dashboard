@@ -25,7 +25,7 @@ def serpapi_get(params):
 def fetch_interest(keyword, category):
     try:
         log.info(f'Interest: {keyword}')
-        data = serpapi_get({'engine':'google_trends','q':keyword.replace(' ','+'),'geo':'SA','date':'today+3-m','data_type':'TIMESERIES','api_key':SERPAPI_KEY})
+        data = serpapi_get({'engine':'google_trends','q':keyword.replace(' ','+'),'geo':'SA','date':'now+7-d','data_type':'TIMESERIES','api_key':SERPAPI_KEY})
         records = []
         for point in data.get('interest_over_time',{}).get('timeline_data',[]):
             for val in point.get('values',[]):
@@ -39,7 +39,7 @@ def fetch_interest(keyword, category):
 def fetch_related(keyword, category):
     try:
         log.info(f'Related: {keyword}')
-        data = serpapi_get({'engine':'google_trends','q':keyword.replace(' ','+'),'geo':'SA','date':'today+3-m','data_type':'RELATED_QUERIES','api_key':SERPAPI_KEY})
+        data = serpapi_get({'engine':'google_trends','q':keyword.replace(' ','+'),'geo':'SA','date':'now+7-d','data_type':'RELATED_QUERIES','api_key':SERPAPI_KEY})
         records = []
         for qtype in ['rising','top']:
             for item in data.get('related_queries',{}).get(qtype,[]):
