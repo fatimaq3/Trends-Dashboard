@@ -82,7 +82,7 @@ main{{max-width:1300px;margin:0 auto;padding:20px;display:grid;gap:20px}}
 const SB_URL = '{SUPABASE_URL}';
 const SB_KEY = '{SUPABASE_ANON_KEY}';
 const COLORS = ['#286140','#B58500','#A32D2D','#185FA5','#534AB7','#0F6E56','#993556','#7A4700'];
-const CAT_AR = {{'geopolitical':'جيوسياسي','economic':'اقتصادي','saudi_local':'محلي'}};
+const CAT_AR = {{'geopolitical':'جيوسياسي','economic':'اقتصادي','saudi_local':'محلي','technology':'تقنية'}};
 
 async function sbFetch(table, params) {{
   const r = await fetch(`${{SB_URL}}/rest/v1/${{table}}?${{params}}`, {{
@@ -348,9 +348,9 @@ function buildUI() {{
     <div class="card">
       <div class="chips" id="catChips">
         <span class="chip active" onclick="filterCat('all',this)">الكل / All</span>
-        <span class="chip" onclick="filterCat('geopolitical',this)">جيوسياسي</span>
         <span class="chip" onclick="filterCat('economic',this)">اقتصادي</span>
         <span class="chip" onclick="filterCat('saudi_local',this)">محلي</span>
+        <span class="chip" onclick="filterCat('technology',this)">تقنية</span>
       </div>
       <div class="kw-tags" id="kwTags"></div>
     </div>
