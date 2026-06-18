@@ -53,7 +53,7 @@ def fetch_serpapi_interest(keyword, category):
 
 def fetch_serpapi_related(keyword, category):
     try:
-        data = serpapi_get({'engine':'google_trends','q':keyword.replace(' ','+'),'geo':'SA','date':'today+3-m','data_type':'RELATED_QUERIES','api_key':SERPAPI_KEY})
+        data = serpapi_get({'engine':'google_trends','q':keyword.replace(' ','+'),'geo':'SA','date':'today+3-m','data_type':'RELATED_QUERIES','region':'SA','api_key':SERPAPI_KEY})
         records = []
         for qtype in ['rising','top']:
             for item in data.get('related_queries',{}).get(qtype,[]):
