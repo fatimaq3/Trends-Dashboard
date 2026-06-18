@@ -13,78 +13,323 @@
   --red:#A32D2D;--red-light:#FCEBEB;--red-border:#F09595;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Tahoma,Arial,sans-serif}
-header{background:var(--green);color:#fff;padding:18px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
-.logo{font-size:1.3rem;font-weight:600;display:flex;align-items:center;gap:8px}
-.logo-accent{color:#B58500}
-.updated{font-size:12px;opacity:.8}
-main{max-width:1300px;margin:0 auto;padding:24px 20px;display:grid;gap:24px}
-.sec-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Tahoma,Arial,sans-serif;min-height:100vh}
+header{background:var(--green);color:#fff;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.logo{font-size:1.3rem;font-weight:700}
+.logo span{color:#B58500}
+.updated{font-size:11px;opacity:.8}
+main{max-width:1300px;margin:0 auto;padding:20px;display:grid;gap:20px}
+.sec-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .sec-label::after{content:'';flex:1;height:1px;background:var(--border)}
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-.kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;border-top:3px solid var(--green)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;border-top:3px solid var(--green)}
 .kpi-label{font-size:11px;color:var(--muted);margin-bottom:4px}
-.kpi-val{font-size:24px;font-weight:600;color:var(--green)}
-.kpi-sub{font-size:11px;color:var(--muted);margin-top:3px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px}
-.alert{background:var(--red-light);border:1px solid var(--red-border);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--red);display:flex;align-items:center;gap:8px;margin-bottom:8px;font-weight:500}
-.alert:last-child{margin-bottom:0}
-.chip{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:20px;font-size:12px;border:1px solid var(--border);background:var(--bg);cursor:pointer;transition:all .15s;color:var(--muted)}
-.chip.active{background:var(--green);border-color:var(--green);color:#fff}
+.kpi-val{font-size:22px;font-weight:700;color:var(--green)}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:2px}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
-.kw-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)}
-.kw-row:last-child{border-bottom:none}
-.kw-rank{font-size:12px;font-weight:600;color:var(--gold);min-width:22px}
-.kw-name{font-size:13px;flex:1}
-.kw-bar-bg{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
-.kw-bar{height:5px;border-radius:3px;background:var(--green)}
-.kw-val{font-size:12px;color:var(--muted);min-width:28px;text-align:left}
-.heatmap{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:8px}
-.hm-cell{height:28px;border-radius:3px}
-.hm-days{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:5px}
-.hm-day{font-size:10px;color:var(--muted);text-align:center}
-.leg{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);margin-top:8px}
-.leg-grad{width:80px;height:7px;border-radius:4px;background:linear-gradient(to left,#286140,#EBF3ED)}
-.leg-dot{width:10px;height:10px;border-radius:2px;display:inline-block;margin-left:4px}
-.cmp-legend{display:flex;gap:12px;font-size:12px;color:var(--muted);margin-bottom:8px;flex-wrap:wrap}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.rising-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
-.rising-row:last-child{border-bottom:none}
-.rising-pct{color:var(--green);font-size:11px;font-weight:600;min-width:50px;text-align:left}
-.add-kw{display:flex;gap:8px;margin-top:12px}
+.chip{padding:5px 12px;border-radius:20px;font-size:12px;border:1px solid var(--border);background:var(--bg);cursor:pointer;color:var(--muted);transition:all .15s}
+.chip.active{background:var(--green);border-color:var(--green);color:#fff}
+.kw-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;min-height:28px}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:12px;background:var(--green-light);border:1px solid #9FE1CB;color:var(--green)}
+.tag-x{cursor:pointer;font-size:14px;line-height:1;margin-right:2px}
+.add-kw{display:flex;gap:8px;margin-top:10px}
 .add-kw input{flex:1;padding:7px 10px;font-size:13px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);outline:none}
 .add-kw input:focus{border-color:var(--green)}
-.add-kw button{padding:7px 14px;font-size:13px;border:none;border-radius:8px;background:var(--green);color:#fff;cursor:pointer}
-.tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;background:var(--green-light);border:1px solid #9FE1CB;color:var(--green);margin:2px}
-.tag-x{cursor:pointer;color:var(--green);font-size:14px;line-height:1}
-.filter-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
-.filter-row select{padding:5px 8px;font-size:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text)}
+.add-kw button{padding:7px 14px;font-size:13px;border:none;border-radius:8px;background:var(--green);color:#fff;cursor:pointer;white-space:nowrap}
 .badge-geo{background:#E6F1FB;color:#0C447C;font-size:11px;padding:2px 7px;border-radius:4px}
 .badge-eco{background:var(--gold-light);color:var(--gold-dark);font-size:11px;padding:2px 7px;border-radius:4px}
 .badge-sa{background:var(--green-light);color:var(--green);font-size:11px;padding:2px 7px;border-radius:4px}
+.leg-dot{width:10px;height:10px;border-radius:2px;display:inline-block}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.kw-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
+.kw-row:last-child{border-bottom:none}
+.kw-rank{font-size:12px;font-weight:700;color:var(--gold);min-width:24px}
+.kw-name{font-size:13px;flex:1}
+.rising-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+.rising-row:last-child{border-bottom:none}
+.rising-pct{color:var(--green);font-size:11px;font-weight:700;min-width:45px;text-align:left}
+.alert{background:var(--red-light);border:1px solid var(--red-border);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--red);display:flex;align-items:center;gap:8px;margin-bottom:8px;font-weight:500}
+.spinner{display:inline-block;width:20px;height:20px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-msg{text-align:center;padding:40px;color:var(--muted)}
+.search-result-card{background:var(--surface);border:2px solid var(--green);border-radius:10px;padding:16px;margin-top:10px}
+.cmp-legend{display:flex;gap:12px;font-size:12px;color:var(--muted);margin-bottom:8px;flex-wrap:wrap;align-items:center}
 @media(max-width:700px){.grid2{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <header>
-  <div class="logo">📈 Trends<span class="logo-accent">Watch</span> 🇸🇦</div>
-  <div class="updated">آخر تحديث / Last updated: 15 Jun 2026 — 11:23 UTC</div>
+  <div class="logo">📈 Trends<span>Watch</span> 🇸🇦</div>
+  <div class="updated" id="updatedAt">جاري التحميل...</div>
 </header>
-<main>
+<main id="mainContent">
+  <div class="loading-msg"><div class="spinner"></div><br><br>جاري تحميل البيانات...</div>
+</main>
 
+<script>
+const SB_URL = 'https://tkmatxmnmphmuykhywtv.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrbWF0eG1ubXBobXV5a2h5d3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MDM1NDgsImV4cCI6MjA5NTk3OTU0OH0.NUwIIhKfqILel1a12HL2NYS-R-iky0E2U7o9tlgtKac';
+const COLORS = ['#286140','#B58500','#A32D2D','#185FA5','#534AB7','#0F6E56','#993556','#7A4700'];
+const CAT_AR = {'geopolitical':'جيوسياسي','economic':'اقتصادي','saudi_local':'محلي'};
+
+async function sbFetch(table, params) {
+  const r = await fetch(`${SB_URL}/rest/v1/${table}?${params}`, {
+    headers: {'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`}
+  });
+  return r.json();
+}
+
+function catClass(c) {
+  return c==='geopolitical'?'badge-geo':c==='economic'?'badge-eco':'badge-sa';
+}
+
+let KW_DATA = {}, TRENDING = [], RELATED = [];
+let activeKws = [], activeCat = 'all';
+let LABELS = [];
+let mainChart = null, cmpChart = null, searchChart = null;
+
+async function loadAll() {
+  const today = new Date();
+  const twoMonthsAgo = new Date(today);
+  twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+  const fromDate = twoMonthsAgo.toISOString().split('T')[0];
+
+  const [interest, trending, related] = await Promise.all([
+    sbFetch('trends_interest', `select=keyword,category,date,interest&date=gte.${fromDate}&order=date.asc&limit=5000`),
+    sbFetch('trends_trending', 'select=keyword,rank&order=rank.asc&limit=20'),
+    sbFetch('trends_related', 'select=main_keyword,related_query,value,query_type,category&query_type=eq.rising&order=value.desc&limit=30')
+  ]);
+
+  // بناء KW_DATA — آخر قيمة لكل تاريخ لكل keyword
+  const map = {};
+  for (const row of (interest || [])) {
+    const k = row.keyword;
+    if (!map[k]) map[k] = {cat: row.category, byDate: {}};
+    map[k].byDate[row.date] = row.interest;
+  }
+
+  // استخراج كل التواريخ الفريدة ومرتبة
+  const allDates = new Set();
+  for (const d of Object.values(map)) Object.keys(d.byDate).forEach(dt => allDates.add(dt));
+  LABELS = Array.from(allDates).sort();
+
+  // بناء arrays
+  for (const [k, d] of Object.entries(map)) {
+    KW_DATA[k] = {
+      cat: d.cat,
+      values: LABELS.map(l => d.byDate[l] ?? null)
+    };
+  }
+
+  TRENDING = trending || [];
+  RELATED = related || [];
+  activeKws = Object.keys(KW_DATA);
+}
+
+function filteredKws() {
+  return activeKws.filter(k => activeCat === 'all' || (KW_DATA[k] && KW_DATA[k].cat === activeCat));
+}
+
+function renderKwTags() {
+  document.getElementById('kwTags').innerHTML = filteredKws().map(k =>
+    `<span class="tag"><span class="${catClass(KW_DATA[k]?.cat||'saudi_local')}">${CAT_AR[KW_DATA[k]?.cat]||''}</span> ${k} <span class="tag-x" onclick="removeKw('${k}')">×</span></span>`
+  ).join('');
+}
+
+function removeKw(k) {
+  activeKws = activeKws.filter(x => x !== k);
+  renderKwTags();
+  renderMainChart();
+}
+
+function renderMainChart() {
+  const kws = filteredKws().slice(0, 8);
+  const datasets = kws.map((k, i) => ({
+    label: k,
+    data: KW_DATA[k]?.values || [],
+    borderColor: COLORS[i % COLORS.length],
+    backgroundColor: COLORS[i % COLORS.length] + '15',
+    borderWidth: 2, pointRadius: 0, fill: false, tension: 0.4,
+    spanGaps: true
+  }));
+  document.getElementById('mainLegend').innerHTML = kws.map((k, i) =>
+    `<span style="display:flex;align-items:center;gap:4px"><span class="leg-dot" style="background:${COLORS[i%COLORS.length]}"></span>${k}</span>`
+  ).join('');
+  if (mainChart) mainChart.destroy();
+  mainChart = new Chart(document.getElementById('mainChart'), {
+    type: 'line',
+    data: {labels: LABELS, datasets},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {legend: {display: false}, tooltip: {mode: 'index', intersect: false}},
+      scales: {
+        x: {ticks: {maxTicksLimit: 8, color: '#6B6860', font: {size: 10}}, grid: {color: 'rgba(0,0,0,.05)'}},
+        y: {min: 0, max: 100, ticks: {color: '#6B6860', font: {size: 10}}, grid: {color: 'rgba(0,0,0,.05)'}}
+      }
+    }
+  });
+}
+
+function updateCompare() {
+  const k1 = document.getElementById('cmp1')?.value || activeKws[0];
+  const k2 = document.getElementById('cmp2')?.value || activeKws[1] || activeKws[0];
+  const d1 = KW_DATA[k1]?.values || [];
+  const d2 = KW_DATA[k2]?.values || [];
+  document.getElementById('cmpLegend').innerHTML =
+    `<span style="display:flex;align-items:center;gap:4px"><span class="leg-dot" style="background:#286140"></span>${k1}</span>` +
+    `<span style="display:flex;align-items:center;gap:4px"><span class="leg-dot" style="background:#B58500"></span>${k2}</span>`;
+  if (cmpChart) cmpChart.destroy();
+  cmpChart = new Chart(document.getElementById('cmpChart'), {
+    type: 'line',
+    data: {labels: LABELS, datasets: [
+      {label: k1, data: d1, borderColor: '#286140', backgroundColor: '#28614015', borderWidth: 2, pointRadius: 0, tension: 0.4, spanGaps: true},
+      {label: k2, data: d2, borderColor: '#B58500', backgroundColor: '#B5850015', borderWidth: 2, pointRadius: 0, tension: 0.4, borderDash: [5,3], spanGaps: true}
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {legend: {display: false}},
+      scales: {
+        x: {ticks: {maxTicksLimit: 6, color: '#6B6860', font: {size: 10}}, grid: {color: 'rgba(0,0,0,.05)'}},
+        y: {min: 0, max: 100, ticks: {color: '#6B6860', font: {size: 10}}, grid: {color: 'rgba(0,0,0,.05)'}}
+      }
+    }
+  });
+}
+
+function renderTrending() {
+  const el = document.getElementById('trendingList');
+  if (!TRENDING.length) { el.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:8px 0">لا بيانات متاحة</p>'; return; }
+  el.innerHTML = TRENDING.map((t, i) =>
+    `<div class="kw-row"><span class="kw-rank">#${t.rank||i+1}</span><span class="kw-name">${t.keyword}</span>${i<3?'<span style="color:#A32D2D">🔴</span>':''}</div>`
+  ).join('');
+}
+
+function renderRising() {
+  const el = document.getElementById('risingList');
+  if (!RELATED.length) { el.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:8px 0">لا بيانات متاحة</p>'; return; }
+  el.innerHTML = RELATED.map(r =>
+    `<div class="rising-row"><span class="${catClass(r.category)}" style="min-width:52px">${CAT_AR[r.category]||''}</span><span style="flex:1">${r.related_query}</span><span class="rising-pct">↑${r.value}%</span></div>`
+  ).join('');
+}
+
+function renderSpikes() {
+  const spikes = [];
+  for (const [kw, d] of Object.entries(KW_DATA)) {
+    const vals = d.values.filter(v => v !== null);
+    if (vals.length >= 14) {
+      const recent = vals.slice(-7), prev = vals.slice(-14, -7);
+      const diff = Math.round(recent.reduce((a,b)=>a+b,0)/recent.length - prev.reduce((a,b)=>a+b,0)/prev.length);
+      if (diff > 20) spikes.push([kw, diff]);
+    }
+  }
+  const sec = document.getElementById('alertsSec');
+  if (!spikes.length) { sec.style.display='none'; return; }
+  sec.style.display='';
+  document.getElementById('alertsList').innerHTML = spikes.map(([kw,diff]) =>
+    `<div class="alert">🔴 <strong>${kw}</strong> — ارتفع ${diff}+ نقطة في آخر 7 أيام</div>`
+  ).join('');
+  document.getElementById('spikeCount').textContent = spikes.length;
+}
+
+async function searchKw() {
+  const inp = document.getElementById('kwSearchInput');
+  const v = inp.value.trim();
+  if (!v) return;
+
+  const resEl = document.getElementById('searchResultArea');
+  resEl.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner"></div></div>';
+  resEl.style.display = 'block';
+
+  const fromDate = (() => {
+    const d = new Date(); d.setMonth(d.getMonth()-2);
+    return d.toISOString().split('T')[0];
+  })();
+
+  const rows = await sbFetch('trends_interest',
+    `select=keyword,category,date,interest&keyword=eq.${encodeURIComponent(v)}&date=gte.${fromDate}&order=date.asc&limit=500`
+  );
+
+  if (!rows || !rows.length) {
+    resEl.innerHTML = `<div class="search-result-card" style="color:var(--muted)">لا توجد بيانات لـ "<strong>${v}</strong>" في آخر شهرين.</div>`;
+    return;
+  }
+
+  // نضيف للـ KW_DATA
+  const byDate = {};
+  rows.forEach(r => { byDate[r.date] = r.interest; });
+  KW_DATA[v] = {cat: rows[0].category, values: LABELS.map(l => byDate[l] ?? null)};
+  if (!activeKws.includes(v)) activeKws.push(v);
+
+  const dates = rows.map(r => r.date);
+  const vals = rows.map(r => r.interest);
+
+  resEl.innerHTML = `<div class="search-result-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <strong style="color:var(--green)">${v}</strong>
+      <button onclick="document.getElementById('searchResultArea').style.display='none'" style="border:none;background:none;cursor:pointer;color:var(--muted);font-size:16px">✕</button>
+    </div>
+    <div style="position:relative;height:180px"><canvas id="searchChart"></canvas></div>
+  </div>`;
+
+  if (searchChart) searchChart.destroy();
+  searchChart = new Chart(document.getElementById('searchChart'), {
+    type: 'line',
+    data: {labels: dates, datasets: [{
+      label: v, data: vals,
+      borderColor: '#286140', backgroundColor: '#28614022',
+      borderWidth: 2, pointRadius: 0, fill: true, tension: 0.4, spanGaps: true
+    }]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {legend: {display: false}, tooltip: {mode: 'index', intersect: false}},
+      scales: {
+        x: {ticks: {maxTicksLimit: 6, color: '#6B6860', font: {size: 10}}, grid: {color: 'rgba(0,0,0,.05)'}},
+        y: {min: 0, max: 100, ticks: {color: '#6B6860', font: {size: 10}}, grid: {color: 'rgba(0,0,0,.05)'}}
+      }
+    }
+  });
+
+  renderKwTags();
+  renderMainChart();
+  inp.value = '';
+}
+
+function buildUI() {
+  const kwKeys = Object.keys(KW_DATA);
+  const allVals = Object.values(KW_DATA).flatMap(d => d.values.filter(v => v !== null));
+  const avgInt = allVals.length ? Math.round(allVals.reduce((a,b)=>a+b,0)/allVals.length) : 0;
+  const topTerm = kwKeys.reduce((a,b) => {
+    const ma = Math.max(...(KW_DATA[a]?.values.filter(v=>v!==null)||[0]));
+    const mb = Math.max(...(KW_DATA[b]?.values.filter(v=>v!==null)||[0]));
+    return mb > ma ? b : a;
+  }, kwKeys[0] || '—');
+
+  document.getElementById('mainContent').innerHTML = `
   <section>
     <div class="sec-label">📊 ملخص / Summary</div>
     <div class="kpi-grid">
-      <div class="kpi"><div class="kpi-label">أعلى مصطلح / Top term</div><div class="kpi-val" style="font-size:16px;margin-top:4px">Vision 2030</div></div>
-      <div class="kpi"><div class="kpi-label">مصطلحات / Tracked</div><div class="kpi-val">5</div><div class="kpi-sub">عبر 3 فئات</div></div>
-      <div class="kpi" style="border-top-color:var(--red)"><div class="kpi-label">ارتفاع مفاجئ / Spikes</div><div class="kpi-val" style="color:var(--red)">0</div><div class="kpi-sub">آخر 7 أيام</div></div>
-      <div class="kpi" style="border-top-color:var(--gold)"><div class="kpi-label">متوسط / Avg interest</div><div class="kpi-val" style="color:var(--gold-dark)">23</div><div class="kpi-sub">من 100</div></div>
+      <div class="kpi"><div class="kpi-label">أعلى مصطلح / Top term</div><div class="kpi-val" style="font-size:15px;margin-top:4px">${topTerm}</div></div>
+      <div class="kpi"><div class="kpi-label">مصطلحات / Tracked</div><div class="kpi-val">${kwKeys.length}</div><div class="kpi-sub">عبر 3 فئات</div></div>
+      <div class="kpi" style="border-top-color:var(--red)"><div class="kpi-label">ارتفاع مفاجئ / Spikes</div><div class="kpi-val" style="color:var(--red)" id="spikeCount">0</div><div class="kpi-sub">آخر 7 أيام</div></div>
+      <div class="kpi" style="border-top-color:var(--gold)"><div class="kpi-label">متوسط / Avg interest</div><div class="kpi-val" style="color:var(--gold-dark)">${avgInt}</div><div class="kpi-sub">من 100</div></div>
     </div>
   </section>
 
-  <section style='display:none'>
+  <section id="alertsSec" style="display:none">
     <div class="sec-label">🚨 تنبيهات / Alerts</div>
-    
+    <div id="alertsList"></div>
+  </section>
+
+  <section>
+    <div class="sec-label">🔍 بحث / Search</div>
+    <div class="card">
+      <div class="add-kw">
+        <input id="kwSearchInput" type="text" placeholder="ابحث عن كلمة بالعربي أو الانجليزي..." onkeydown="if(event.key==='Enter')searchKw()">
+        <button onclick="searchKw()">بحث + إضافة</button>
+      </div>
+      <div id="searchResultArea" style="display:none;margin-top:10px"></div>
+    </div>
   </section>
 
   <section>
@@ -92,24 +337,20 @@ main{max-width:1300px;margin:0 auto;padding:24px 20px;display:grid;gap:24px}
     <div class="card">
       <div class="chips" id="catChips">
         <span class="chip active" onclick="filterCat('all',this)">الكل / All</span>
-        <span class="chip" onclick="filterCat('geopolitical',this)">جيوسياسي / Geopolitical</span>
-        <span class="chip" onclick="filterCat('economic',this)">اقتصادي / Economic</span>
-        <span class="chip" onclick="filterCat('saudi_local',this)">محلي / Local</span>
+        <span class="chip" onclick="filterCat('geopolitical',this)">جيوسياسي</span>
+        <span class="chip" onclick="filterCat('economic',this)">اقتصادي</span>
+        <span class="chip" onclick="filterCat('saudi_local',this)">محلي</span>
       </div>
-      <div id="kwTags"></div>
-      <div class="add-kw">
-        <input type="text" id="kwInput" placeholder="أضف كلمة... / Add keyword..." onkeydown="if(event.key==='Enter')addKw()">
-        <button onclick="addKw()">+ إضافة</button>
-      </div>
+      <div class="kw-tags" id="kwTags"></div>
     </div>
   </section>
 
   <section>
-    <div class="sec-label">📈 الاهتمام عبر الزمن / Interest over time — 90 days</div>
+    <div class="sec-label">📈 الاهتمام عبر الزمن / Interest over time</div>
     <div class="card">
       <div class="cmp-legend" id="mainLegend"></div>
-      <div style="position:relative;width:100%;height:240px">
-        <canvas id="mainChart" role="img" aria-label="مخطط الاهتمام بالكلمات المفتاحية">بيانات الاهتمام.</canvas>
+      <div style="position:relative;width:100%;height:260px">
+        <canvas id="mainChart"></canvas>
       </div>
     </div>
   </section>
@@ -118,15 +359,13 @@ main{max-width:1300px;margin:0 auto;padding:24px 20px;display:grid;gap:24px}
     <section>
       <div class="sec-label">⚖️ مقارنة / Compare</div>
       <div class="card">
-        <div class="filter-row">
-          <select id="cmp1" onchange="updateCompare()"><option>Vision 2030</option><option>Israel Gaza</option><option>Saudi Aramco</option><option>Iran war</option><option>oil price</option></select>
-          <span style="font-size:13px;color:var(--muted)">vs</span>
-          <select id="cmp2" onchange="updateCompare()"><option>Israel Gaza</option><option>Saudi Aramco</option><option>Iran war</option><option>oil price</option></select>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+          <select id="cmp1" onchange="updateCompare()" style="padding:5px 8px;font-size:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg)">${kwKeys.map(k=>`<option>${k}</option>`).join('')}</select>
+          <span style="color:var(--muted);font-size:13px">vs</span>
+          <select id="cmp2" onchange="updateCompare()" style="padding:5px 8px;font-size:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg)">${kwKeys.slice(1).map(k=>`<option>${k}</option>`).join('')}</select>
         </div>
         <div class="cmp-legend" id="cmpLegend"></div>
-        <div style="position:relative;width:100%;height:180px">
-          <canvas id="cmpChart" role="img" aria-label="مقارنة بين مصطلحين">بيانات المقارنة.</canvas>
-        </div>
+        <div style="position:relative;width:100%;height:180px"><canvas id="cmpChart"></canvas></div>
       </div>
     </section>
     <section>
@@ -135,79 +374,52 @@ main{max-width:1300px;margin:0 auto;padding:24px 20px;display:grid;gap:24px}
     </section>
   </div>
 
-  <div class="grid2">
-    <section>
-      <div class="sec-label">📅 Heatmap أسبوعي / Weekly heatmap</div>
-      <div class="card">
-        <div class="filter-row"><select id="hmKw" onchange="renderHeatmap()"><option>Vision 2030</option><option>Israel Gaza</option><option>Saudi Aramco</option><option>Iran war</option><option>oil price</option></select></div>
-        <div class="hm-days"><div class="hm-day">سبت</div><div class="hm-day">أحد</div><div class="hm-day">اثنين</div><div class="hm-day">ثلاثاء</div><div class="hm-day">أربعاء</div><div class="hm-day">خميس</div><div class="hm-day">جمعة</div></div>
-        <div class="heatmap" id="heatmapGrid"></div>
-        <div class="leg"><span>منخفض</span><div class="leg-grad"></div><span>مرتفع</span></div>
-      </div>
-    </section>
-    <section>
-      <div class="sec-label">📍 مناطق البحث / Search regions (SA)</div>
-      <div class="card" id="regionList"></div>
-    </section>
-  </div>
-
   <section>
     <div class="sec-label">🚀 استفسارات صاعدة / Rising queries</div>
     <div class="card"><div id="risingList"></div></div>
-  </section>
+  </section>`;
 
-</main>
-<script>
-const KW_DATA={"Vision 2030": {"cat": "economic", "dates": ["2026-03-15", "2026-03-16", "2026-03-17", "2026-03-18", "2026-03-19", "2026-03-20", "2026-03-21", "2026-03-22", "2026-03-23", "2026-03-24", "2026-03-25", "2026-03-26", "2026-03-27", "2026-03-28", "2026-03-29", "2026-03-30", "2026-03-31", "2026-04-01", "2026-04-02", "2026-04-03", "2026-04-04", "2026-04-05", "2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05", "2026-05-06", "2026-05-07", "2026-05-08", "2026-05-09", "2026-05-10", "2026-05-11", "2026-05-12", "2026-05-13", "2026-05-14", "2026-05-15", "2026-05-16", "2026-05-17", "2026-05-18", "2026-05-19", "2026-05-20", "2026-05-21", "2026-05-22", "2026-05-23", "2026-05-24", "2026-05-25", "2026-05-26", "2026-05-27", "2026-05-28", "2026-05-29", "2026-05-30", "2026-05-31", "2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04", "2026-06-05", "2026-06-06", "2026-06-07", "2026-06-08", "2026-06-09", "2026-06-10", "2026-06-11", "2026-06-12", "2026-06-13", "2026-06-14", "2026-06-15"], "values": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 58, 0, 0, 79, 0, 59, 69, 0, 62, 0, 0, 67, 0, 75, 0, 82, 0, 0, 0, 62, 0, 61, 0, 0, 73, 74, 86, 0, 0, 100, 0, 86, 0, 0, 0, 0, 80, 0, 0, 71, 79, 75, 80, 83, 0, 64, 0, 0, 0, 0, 0, 0, 69, 0, 0, 0, 0, 0, 0, 0, 0, 26, 22, 23, 19, 12, 22, 25, 27, 42, 24, 18, 17, 14, 21, 39]}, "Israel Gaza": {"cat": "geopolitical", "dates": ["2026-03-15", "2026-03-16", "2026-03-17", "2026-03-18", "2026-03-19", "2026-03-20", "2026-03-21", "2026-03-22", "2026-03-23", "2026-03-24", "2026-03-25", "2026-03-26", "2026-03-27", "2026-03-28", "2026-03-29", "2026-03-30", "2026-03-31", "2026-04-01", "2026-04-02", "2026-04-03", "2026-04-04", "2026-04-05", "2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05", "2026-05-06", "2026-05-07", "2026-05-08", "2026-05-09", "2026-05-10", "2026-05-11", "2026-05-12", "2026-05-13", "2026-05-14", "2026-05-15", "2026-05-16", "2026-05-17", "2026-05-18", "2026-05-19", "2026-05-20", "2026-05-21", "2026-05-22", "2026-05-23", "2026-05-24", "2026-05-25", "2026-05-26", "2026-05-27", "2026-05-28", "2026-05-29", "2026-05-30", "2026-05-31", "2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04", "2026-06-05", "2026-06-06", "2026-06-07", "2026-06-08", "2026-06-09", "2026-06-10", "2026-06-11", "2026-06-12", "2026-06-13", "2026-06-14", "2026-06-15"], "values": [0, 0, 0, 0, 0, 0, 98, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 5, 5, 0, 0, 0, 0, 6, 5, 6, 0, 5, 0, 0, 9]}, "Saudi Aramco": {"cat": "economic", "dates": ["2026-03-15", "2026-03-16", "2026-03-17", "2026-03-18", "2026-03-19", "2026-03-20", "2026-03-21", "2026-03-22", "2026-03-23", "2026-03-24", "2026-03-25", "2026-03-26", "2026-03-27", "2026-03-28", "2026-03-29", "2026-03-30", "2026-03-31", "2026-04-01", "2026-04-02", "2026-04-03", "2026-04-04", "2026-04-05", "2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05", "2026-05-06", "2026-05-07", "2026-05-08", "2026-05-09", "2026-05-10", "2026-05-11", "2026-05-12", "2026-05-13", "2026-05-14", "2026-05-15", "2026-05-16", "2026-05-17", "2026-05-18", "2026-05-19", "2026-05-20", "2026-05-21", "2026-05-22", "2026-05-23", "2026-05-24", "2026-05-25", "2026-05-26", "2026-05-27", "2026-05-28", "2026-05-29", "2026-05-30", "2026-05-31", "2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04", "2026-06-05", "2026-06-06", "2026-06-07", "2026-06-08", "2026-06-09", "2026-06-10", "2026-06-11", "2026-06-12", "2026-06-13", "2026-06-14", "2026-06-15"], "values": [39, 27, 36, 41, 75, 30, 30, 31, 35, 26, 35, 0, 22, 36, 39, 33, 53, 41, 31, 29, 26, 38, 41, 41, 28, 23, 44, 100, 51, 37, 17, 37, 29, 26, 28, 37, 20, 25, 41, 28, 0, 16, 20, 26, 38, 32, 28, 0, 30, 22, 26, 33, 41, 24, 23, 20, 45, 72, 39, 37, 30, 23, 25, 19, 37, 22, 29, 25, 24, 0, 21, 25, 17, 0, 0, 0, 0, 31, 27, 25, 23, 20, 14, 16, 26, 26, 24, 24, 23, 15, 18, 18, 26]}, "Iran war": {"cat": "geopolitical", "dates": ["2026-03-15", "2026-03-16", "2026-03-17", "2026-03-18", "2026-03-19", "2026-03-20", "2026-03-21", "2026-03-22", "2026-03-23", "2026-03-24", "2026-03-25", "2026-03-26", "2026-03-27", "2026-03-28", "2026-03-29", "2026-03-30", "2026-03-31", "2026-04-01", "2026-04-02", "2026-04-03", "2026-04-04", "2026-04-05", "2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05", "2026-05-06", "2026-05-07", "2026-05-08", "2026-05-09", "2026-05-10", "2026-05-11", "2026-05-12", "2026-05-13", "2026-05-14", "2026-05-15", "2026-05-16", "2026-05-17", "2026-05-18", "2026-05-19", "2026-05-20", "2026-05-21", "2026-05-22", "2026-05-23", "2026-05-24", "2026-05-25", "2026-05-26", "2026-05-27", "2026-05-28", "2026-05-29", "2026-05-30", "2026-05-31", "2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04", "2026-06-05", "2026-06-06", "2026-06-07", "2026-06-08", "2026-06-09", "2026-06-10", "2026-06-11", "2026-06-12", "2026-06-13", "2026-06-14", "2026-06-15"], "values": [62, 57, 56, 68, 62, 51, 55, 71, 78, 57, 61, 67, 48, 51, 50, 53, 58, 54, 42, 48, 42, 48, 48, 100, 76, 38, 25, 32, 39, 20, 25, 20, 19, 29, 20, 26, 30, 30, 19, 16, 23, 20, 19, 17, 11, 11, 7, 12, 18, 16, 19, 18, 16, 17, 21, 10, 11, 17, 13, 10, 20, 9, 7, 10, 7, 10, 10, 11, 10, 16, 17, 6, 9, 14, 17, 12, 9, 14, 11, 7, 17, 11, 7, 7, 10, 18, 10, 15, 17, 12, 7, 10, 15]}, "oil price": {"cat": "economic", "dates": ["2026-03-15", "2026-03-16", "2026-03-17", "2026-03-18", "2026-03-19", "2026-03-20", "2026-03-21", "2026-03-22", "2026-03-23", "2026-03-24", "2026-03-25", "2026-03-26", "2026-03-27", "2026-03-28", "2026-03-29", "2026-03-30", "2026-03-31", "2026-04-01", "2026-04-02", "2026-04-03", "2026-04-04", "2026-04-05", "2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05", "2026-05-06", "2026-05-07", "2026-05-08", "2026-05-09", "2026-05-10", "2026-05-11", "2026-05-12", "2026-05-13", "2026-05-14", "2026-05-15", "2026-05-16", "2026-05-17", "2026-05-18", "2026-05-19", "2026-05-20", "2026-05-21", "2026-05-22", "2026-05-23", "2026-05-24", "2026-05-25", "2026-05-26", "2026-05-27", "2026-05-28", "2026-05-29", "2026-05-30", "2026-05-31", "2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04", "2026-06-05", "2026-06-06", "2026-06-07", "2026-06-08", "2026-06-09", "2026-06-10", "2026-06-11", "2026-06-12", "2026-06-13", "2026-06-14", "2026-06-15"], "values": [65, 76, 59, 92, 90, 73, 54, 63, 100, 60, 54, 53, 56, 49, 55, 71, 86, 60, 70, 72, 40, 41, 52, 73, 86, 54, 38, 28, 35, 41, 36, 27, 27, 59, 37, 25, 36, 34, 29, 37, 30, 18, 23, 23, 31, 39, 41, 34, 24, 21, 34, 31, 27, 24, 27, 19, 18, 28, 19, 26, 18, 23, 15, 18, 21, 23, 16, 20, 23, 15, 18, 23, 18, 11, 20, 19, 15, 16, 16, 12, 13, 11, 13, 8, 9, 16, 11, 15, 16, 13, 9, 9, 27]}};
-const TRENDING=[{"keyword": "تونس", "rank": 1}, {"keyword": "india vs pakistan", "rank": 2}, {"keyword": "هولندا ضد اليابان", "rank": 3}, {"keyword": "قصاص", "rank": 4}, {"keyword": "germany vs curaçao", "rank": 5}, {"keyword": "netherlands vs japan", "rank": 6}, {"keyword": "oliver tree", "rank": 7}, {"keyword": "المانيا", "rank": 8}, {"keyword": "ساحل العاج ضد الإكوادور", "rank": 9}, {"keyword": "sweden vs tunisia", "rank": 10}, {"keyword": "ivory coast vs ecuador", "rank": 11}, {"keyword": "محمد مرزبان", "rank": 12}, {"keyword": "দৈনিক কালবেলা", "rank": 13}, {"keyword": "وقود", "rank": 14}, {"keyword": "متى مباراة المنتخب السعودي", "rank": 15}, {"keyword": "كوكوريلا", "rank": 16}, {"keyword": "جورجي جيسوس", "rank": 17}, {"keyword": "مصر وبلجيكا", "rank": 18}, {"keyword": "دونالد ترمب", "rank": 19}, {"keyword": "justin gaethje", "rank": 20}];
-const RELATED=[{"main_keyword": "Israel Gaza", "related_query": "netanyahu bocorkan rencana baru israel di gaza setelah perang", "value": 501250, "query_type": "rising", "category": "geopolitical"}, {"main_keyword": "Saudi Aramco", "related_query": "saudi aramco total refining and petrochemical co.", "value": 422700, "query_type": "rising", "category": "economic"}, {"main_keyword": "Vision 2030", "related_query": "which of the following can be a topic for the reading text page 60? the 2030 vision of saudi arabia. saudi dreams. the world in 2030.", "value": 267800, "query_type": "rising", "category": "economic"}, {"main_keyword": "Saudi Aramco", "related_query": "lidl near me", "value": 39300, "query_type": "rising", "category": "economic"}, {"main_keyword": "Iran war", "related_query": "sensex", "value": 33200, "query_type": "rising", "category": "geopolitical"}, {"main_keyword": "Iran war", "related_query": "dhurandhar movie box office collection", "value": 30650, "query_type": "rising", "category": "geopolitical"}, {"main_keyword": "Saudi Aramco", "related_query": "mycar saudi aramco", "value": 24050, "query_type": "rising", "category": "economic"}, {"main_keyword": "oil price", "related_query": "usd to zar", "value": 23950, "query_type": "rising", "category": "economic"}, {"main_keyword": "oil price", "related_query": "sar to egp", "value": 23400, "query_type": "rising", "category": "economic"}, {"main_keyword": "oil price", "related_query": "python data analysis", "value": 23400, "query_type": "rising", "category": "economic"}, {"main_keyword": "oil price", "related_query": "intc stock price", "value": 20450, "query_type": "rising", "category": "economic"}, {"main_keyword": "Iran war", "related_query": "nifty 50", "value": 17800, "query_type": "rising", "category": "geopolitical"}, {"main_keyword": "oil price", "related_query": "iran war news update today", "value": 15550, "query_type": "rising", "category": "economic"}, {"main_keyword": "Iran war", "related_query": "who is winning the iran war", "value": 15450, "query_type": "rising", "category": "geopolitical"}, {"main_keyword": "Iran war", "related_query": "ndtv news", "value": 15450, "query_type": "rising", "category": "geopolitical"}, {"main_keyword": "oil price", "related_query": "microservices architecture", "value": 15150, "query_type": "rising", "category": "economic"}, {"main_keyword": "oil price", "related_query": "dow jones today", "value": 14600, "query_type": "rising", "category": "economic"}, {"main_keyword": "oil price", "related_query": "urdupoint", "value": 14550, "query_type": "rising", "category": "economic"}, {"main_keyword": "Iran war", "related_query": "iran vs usa war update", "value": 14200, "query_type": "rising", "category": "geopolitical"}, {"main_keyword": "Iran war", "related_query": "times of india", "value": 13950, "query_type": "rising", "category": "geopolitical"}, {"main_keyword": "oil price", "related_query": "jang", "value": 13700, "query_type": "rising", "category": "economic"}, {"main_keyword": "Iran war", "related_query": "backend development", "value": 13100, "query_type": "rising", "category": "geopolitical"}, {"main_keyword": "oil price", "related_query": "devops practices", "value": 12500, "query_type": "rising", "category": "economic"}, {"main_keyword": "Iran war", "related_query": "robotics programming", "value": 12050, "query_type": "rising", "category": "geopolitical"}, {"main_keyword": "oil price", "related_query": "docker containerization", "value": 12000, "query_type": "rising", "category": "economic"}, {"main_keyword": "Iran war", "related_query": "khaleej times", "value": 11700, "query_type": "rising", "category": "geopolitical"}, {"main_keyword": "oil price", "related_query": "walmart near me", "value": 11250, "query_type": "rising", "category": "economic"}, {"main_keyword": "Iran war", "related_query": "python data analysis", "value": 10900, "query_type": "rising", "category": "geopolitical"}, {"main_keyword": "oil price", "related_query": "dow jones index", "value": 10850, "query_type": "rising", "category": "economic"}, {"main_keyword": "Iran war", "related_query": "machine learning algorithms", "value": 10600, "query_type": "rising", "category": "geopolitical"}];
-const COLORS=['#286140','#B58500','#A32D2D','#185FA5','#534AB7','#0F6E56','#993556','#7A4700'];
-let activeKws=Object.keys(KW_DATA),activeCat='all';
-const LABELS=(()=>{const a=[],now=new Date('2026-06-15');for(let i=89;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i);a.push(d.toLocaleDateString('ar-SA',{month:'short',day:'numeric'}));}return a;})();
-const CAT_AR={"geopolitical":"جيوسياسي","economic":"اقتصادي","saudi_local":"محلي"};
-function catClass(c){return c==='geopolitical'?'badge-geo':c==='economic'?'badge-eco':'badge-sa';}
-function filteredKws(){return activeKws.filter(k=>activeCat==='all'||(KW_DATA[k]&&KW_DATA[k].cat===activeCat));}
-function renderKwTags(){document.getElementById('kwTags').innerHTML=filteredKws().map(k=>`<span class="tag"><span class="${catClass(KW_DATA[k]?.cat||'saudi_local')}">${CAT_AR[KW_DATA[k]?.cat]||''}</span> ${k}<span class="tag-x" onclick="removeKw('${k}')">×</span></span>`).join('');}
-function addKw(){const inp=document.getElementById('kwInput'),v=inp.value.trim();if(!v||KW_DATA[v])return;const base=Math.floor(Math.random()*60)+20;KW_DATA[v]={cat:'saudi_local',dates:[],values:Array.from({length:90},()=>Math.min(100,Math.max(5,base+Math.floor(Math.random()*20)-10)))};activeKws.push(v);inp.value='';renderKwTags();renderMainChart();document.getElementById('trackedCount').textContent=activeKws.length;}
-function removeKw(k){activeKws=activeKws.filter(x=>x!==k);delete KW_DATA[k];renderKwTags();renderMainChart();}
-function filterCat(cat,el){activeCat=cat;document.querySelectorAll('#catChips .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderKwTags();renderMainChart();}
-let mainChart=null;
-function renderMainChart(){
-  const kws=filteredKws().slice(0,6);
-  const datasets=kws.map((k,i)=>{const d=KW_DATA[k];const vals=d.values&&d.values.length?d.values:Array(90).fill(0);return {label:k,data:vals,borderColor:COLORS[i%COLORS.length],backgroundColor:COLORS[i%COLORS.length]+'15',borderWidth:2,pointRadius:0,fill:false,tension:0.4};});
-  document.getElementById('mainLegend').innerHTML=kws.map((k,i)=>`<span style="display:flex;align-items:center;gap:4px"><span class="leg-dot" style="background:${COLORS[i%COLORS.length]}"></span>${k}</span>`).join('');
-  if(mainChart)mainChart.destroy();
-  mainChart=new Chart(document.getElementById('mainChart'),{type:'line',data:{labels:LABELS,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:{ticks:{maxTicksLimit:8,color:'#6B6860',font:{size:10}},grid:{color:'rgba(0,0,0,.06)'}},y:{min:0,max:100,ticks:{color:'#6B6860',font:{size:10}},grid:{color:'rgba(0,0,0,.06)'}}}}});
+  window.filterCat = function(cat, el) {
+    activeCat = cat;
+    document.querySelectorAll('#catChips .chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    renderKwTags();
+    renderMainChart();
+  };
 }
-let cmpChart=null;
-function updateCompare(){
-  const k1=document.getElementById('cmp1')?.value||activeKws[0];
-  const k2=document.getElementById('cmp2')?.value||activeKws[1]||activeKws[0];
-  const d1=KW_DATA[k1]?.values||Array(90).fill(0);
-  const d2=KW_DATA[k2]?.values||Array(90).fill(0);
-  document.getElementById('cmpLegend').innerHTML=`<span><span class="leg-dot" style="background:#286140"></span>${k1}</span><span><span class="leg-dot" style="background:#B58500"></span>${k2}</span>`;
-  if(cmpChart)cmpChart.destroy();
-  cmpChart=new Chart(document.getElementById('cmpChart'),{type:'line',data:{labels:LABELS,datasets:[{label:k1,data:d1,borderColor:'#286140',backgroundColor:'#28614015',borderWidth:2,pointRadius:0,tension:0.4},{label:k2,data:d2,borderColor:'#B58500',backgroundColor:'#B5850015',borderWidth:2,pointRadius:0,tension:0.4,borderDash:[5,3]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{maxTicksLimit:5,color:'#6B6860',font:{size:10}},grid:{color:'rgba(0,0,0,.06)'}},y:{min:0,max:100,ticks:{color:'#6B6860',font:{size:10}},grid:{color:'rgba(0,0,0,.06)'}}}}});
+
+async function init() {
+  try {
+    await loadAll();
+    buildUI();
+    renderKwTags();
+    renderMainChart();
+    updateCompare();
+    renderTrending();
+    renderRising();
+    renderSpikes();
+    document.getElementById('updatedAt').textContent =
+      'آخر تحديث: ' + new Date().toLocaleString('ar-SA', {timeZone:'Asia/Riyadh'});
+
+    setInterval(async () => {
+      await loadAll();
+      renderKwTags();
+      renderMainChart();
+      updateCompare();
+      renderTrending();
+      renderRising();
+      renderSpikes();
+      document.getElementById('updatedAt').textContent =
+        'آخر تحديث: ' + new Date().toLocaleString('ar-SA', {timeZone:'Asia/Riyadh'});
+    }, 5 * 60 * 1000);
+
+  } catch(e) {
+    document.getElementById('mainContent').innerHTML =
+      `<div class="loading-msg" style="color:var(--red)">❌ خطأ: ${e.message}</div>`;
+  }
 }
-function renderTrending(){
-  if(!TRENDING.length){document.getElementById('trendingList').innerHTML='<p style="font-size:13px;color:#6B6860;padding:8px 0">لا بيانات متاحة — No data yet</p>';return;}
-  document.getElementById('trendingList').innerHTML=TRENDING.map((t,i)=>`<div class="kw-row"><span class="kw-rank">#${t.rank||i+1}</span><span class="kw-name">${t.keyword}</span><span style="font-size:11px;color:${i<3?'#A32D2D':'#6B6860'}">${i<3?'🔴':''}</span></div>`).join('');
-}
-function renderHeatmap(){
-  const grid=document.getElementById('heatmapGrid');
-  const vals=Array.from({length:28},()=>Math.floor(Math.random()*90)+10);
-  const mx=Math.max(...vals);
-  grid.innerHTML=vals.map(v=>{const pct=v/mx;const alpha=(0.15+pct*0.85).toFixed(2);return `<div class="hm-cell" style="background:rgba(40,97,64,${alpha})" title="${v}"></div>`;}).join('');
-}
-function renderRegions(){
-  const regions=[{name:'الرياض / Riyadh',val:92},{name:'جدة / Jeddah',val:78},{name:'الدمام / Dammam',val:61},{name:'مكة / Makkah',val:55},{name:'المدينة / Madinah',val:48},{name:'أبها / Abha',val:32}];
-  document.getElementById('regionList').innerHTML=regions.map(r=>`<div class="kw-row"><span class="kw-name">${r.name}</span><div class="kw-bar-bg"><div class="kw-bar" style="width:${r.val}%"></div></div><span class="kw-val">${r.val}</span></div>`).join('');
-}
-function renderRising(){
-  if(!RELATED.length){document.getElementById('risingList').innerHTML='<p style="font-size:13px;color:#6B6860;padding:8px 0">لا بيانات متاحة — No data yet</p>';return;}
-  document.getElementById('risingList').innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+RELATED.map(r=>`<div class="rising-row"><span class="${catClass(r.category)}" style="min-width:48px">${CAT_AR[r.category]||''}</span><span style="flex:1;font-size:12px">${r.related_query}</span><span class="rising-pct">↑${r.value}%</span></div>`).join('')+'</div>';
-}
-renderKwTags();renderMainChart();updateCompare();renderTrending();renderHeatmap();renderRegions();renderRising();
+
+init();
 </script>
 </body>
 </html>
