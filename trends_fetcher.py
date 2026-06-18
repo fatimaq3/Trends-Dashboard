@@ -1,6 +1,7 @@
 import os, json, time, logging, subprocess
 from datetime import datetime, timezone
 from supabase import create_client, Client
+from pytrends.request import TrendReq
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 log = logging.getLogger(__name__)
@@ -10,10 +11,21 @@ SUPABASE_KEY = os.environ['SUPABASE_KEY']
 SERPAPI_KEY  = os.environ['SERPAPI_KEY']
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+pytrends = TrendReq(hl='ar', tz=180, timeout=(10,25), retries=2, backoff_factor=1.5)
+
 KEYWORD_GROUPS = {
-    "economic": ["النفط", "البحر الأحمر"],
-    "saudi_local": ["حافز", "وزارة التعليم", "وظائف", "رحلات", "قياس", "Noor"],
-    "technology": ["ذكاء اصطناعي", "AI"]
+    "economic": {
+        "serpapi": ["oil Saudi", "Red Sea Saudi"],
+        "pytrends": ["النفط", "البحر الأحمر"]
+    },
+    "saudi_local": {
+        "serpapi": ["Hafiz Saudi", "Saudi education", "Saudi jobs", "Saudi travel", "Qiyas Saudi", "Noor Saudi"],
+        "pytrends": ["حافز", "وزارة التعليم", "وظائف", "رحلات", "قياس", "نور"]
+    },
+    "technology": {
+        "serpapi": ["artificial intelligence Saudi", "AI Saudi"],
+        "pytrends": ["ذكاء اصطناعي", "الذكاء الاصطناعي"]
+    }
 }
 
 def serpapi_get(params):
@@ -25,9 +37,9 @@ def serpapi_get(params):
     except:
         return {}
 
-def fetch_interest(keyword, category):
+def fetch_serpapi_interest(keyword, category):
     try:
-        log.info(f'Interest: {keyword}')
+        log.info(f'SerpAPI Interest: {keyword}')
         data = serpapi_get({'engine':'google_trends','q':keyword.replace(' ','+'),'geo':'SA','date':'today+3-m','data_type':'TIMESERIES','api_key':SERPAPI_KEY})
         records = []
         for point in data.get('interest_over_time',{}).get('timeline_data',[]):
@@ -36,21 +48,39 @@ def fetch_interest(keyword, category):
         log.info(f'  {len(records)} points')
         return records
     except Exception as e:
-        log.error(f'Error {keyword}: {e}')
+        log.error(f'SerpAPI Error {keyword}: {e}')
         return []
 
-def fetch_related(keyword, category):
+def fetch_serpapi_related(keyword, category):
     try:
-        log.info(f'Related: {keyword}')
         data = serpapi_get({'engine':'google_trends','q':keyword.replace(' ','+'),'geo':'SA','date':'today+3-m','data_type':'RELATED_QUERIES','api_key':SERPAPI_KEY})
         records = []
         for qtype in ['rising','top']:
             for item in data.get('related_queries',{}).get(qtype,[]):
                 records.append({'main_keyword':keyword,'related_query':item.get('query',''),'value':int(item.get('extracted_value',0)),'query_type':qtype,'category':category,'fetched_at':datetime.now(timezone.utc).isoformat()})
-        log.info(f'  {len(records)} related')
+        return records
+    except:
+        return []
+
+def fetch_pytrends_interest(keyword, category):
+    try:
+        log.info(f'Pytrends Interest: {keyword}')
+        time.sleep(10)
+        pytrends.build_payload([keyword], timeframe='today 3-m', geo='SA')
+        df = pytrends.interest_over_time()
+        if df.empty:
+            log.info(f'  0 points')
+            return []
+        df = df.drop(columns=['isPartial'], errors='ignore')
+        records = []
+        for date_idx, row in df.iterrows():
+            val = int(row[keyword]) if keyword in row else 0
+            if val > 0:
+                records.append({'keyword':keyword,'category':category,'date':date_idx.strftime('%Y-%m-%d'),'interest':val,'geo':'SA','fetched_at':datetime.now(timezone.utc).isoformat()})
+        log.info(f'  {len(records)} points')
         return records
     except Exception as e:
-        log.error(f'Error related {keyword}: {e}')
+        log.error(f'Pytrends Error {keyword}: {e}')
         return []
 
 def fetch_trending():
@@ -79,11 +109,15 @@ def save(table, records):
 def main():
     log.info('Starting...')
     all_interest, all_related = [], []
-    for category, keywords in KEYWORD_GROUPS.items():
-        for kw in keywords:
-            all_interest.extend(fetch_interest(kw, category))
-            all_related.extend(fetch_related(kw, category))
+
+    for category, groups in KEYWORD_GROUPS.items():
+        for kw in groups['serpapi']:
+            all_interest.extend(fetch_serpapi_interest(kw, category))
+            all_related.extend(fetch_serpapi_related(kw, category))
             time.sleep(2)
+        for kw in groups['pytrends']:
+            all_interest.extend(fetch_pytrends_interest(kw, category))
+
     trending = fetch_trending()
     save('trends_interest', all_interest)
     save('trends_trending', trending)
