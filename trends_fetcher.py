@@ -44,7 +44,14 @@ def fetch_serpapi_interest(keyword, category):
         records = []
         for point in data.get('interest_over_time',{}).get('timeline_data',[]):
             for val in point.get('values',[]):
-                records.append({'keyword':keyword,'category':category,'date':point['date'][:10].strip(),'interest':int(val.get('extracted_value',0)),'geo':'SA','fetched_at':datetime.now(timezone.utc).isoformat()})
+                from datetime import datetime as dt
+                date_str = point.get('date','')
+                try:
+                    parsed = dt.strptime(date_str[:12].strip(), '%b %d, %Y')
+                    date_fmt = parsed.strftime('%Y-%m-%d')
+                except:
+                    date_fmt = date_str[:10].strip()
+                records.append({'keyword':keyword,'category':category,'date':date_fmt,'interest':int(val.get('extracted_value',0)),'geo':'SA','fetched_at':datetime.now(timezone.utc).isoformat()})
         log.info(f'  {len(records)} points')
         return records
     except Exception as e:
